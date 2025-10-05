@@ -33,7 +33,10 @@ private:
     const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
     const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
   
-  Controller controller_{ std::make_unique<ModeA>() };
+  // Test pole values
+  
+  
+  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 0.0 };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
@@ -75,8 +78,8 @@ void AIVController::syncCallback(
   const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
   //   RCLCPP_INFO(this->get_logger(), "Got msg: %f", msg.ranges[0]);
-  float test_odom = odom->pose.pose.position.x;
-  float test_scan = scan->ranges[0];
+  double test_odom = odom->pose.pose.position.x;
+  double test_scan = scan->ranges[0];
   std::cout << test_odom << std::endl;
   std::cout << test_scan << std::endl;
   controller_.update();

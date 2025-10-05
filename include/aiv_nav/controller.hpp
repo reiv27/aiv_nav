@@ -22,8 +22,13 @@ public:
 class Controller final
 {
 public:
-  explicit Controller(std::unique_ptr<State> initial)
-    : state_(std::move(initial))
+  Controller(std::unique_ptr<State> init_state, double linear_velocity, double angular_velocity, double R_min, double R, double ro_0)
+  : state_(std::move(init_state))
+  , linear_velocity_(linear_velocity)
+  , angular_velocity_(angular_velocity)
+  , R_min_(R_min)
+  , R_(R)
+  , ro_0_(ro_0)
   {
   }
   
@@ -62,6 +67,13 @@ public:
 
 private:
   std::unique_ptr<State> state_;
+
+  const double linear_velocity_;
+  const double angular_velocity_;
+  const double R_min_;
+  const double R_;
+  const double ro_0_;
+
   int count_ = 0;
 };
 
