@@ -16,6 +16,13 @@ public:
   virtual ~State() = default;
   virtual void handle(Controller& context) = 0;
   virtual std::string_view name() const = 0;
+
+  /**
+   * @brief Calculate the control signal
+   * @param context Controller context
+   * @return Control signal
+   */
+  virtual double calculate_control_signal(const Controller& context) const = 0;
 };
 
 /**
