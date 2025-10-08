@@ -22,6 +22,7 @@ set(CONTROLLER_SOURCES
   src/modes/mode_a.cpp
   src/modes/mode_c.cpp
   src/modes/mode_g.cpp
+  src/companion_disk.cpp
 )
 
 # Main executable source

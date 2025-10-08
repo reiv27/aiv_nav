@@ -36,7 +36,7 @@ private:
   // Test pole values
   
   
-  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 0.0 };
+  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 360 };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
@@ -78,11 +78,16 @@ void AIVController::syncCallback(
   const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
   //   RCLCPP_INFO(this->get_logger(), "Got msg: %f", msg.ranges[0]);
-  double test_odom = odom->pose.pose.position.x;
-  double test_scan = scan->ranges[0];
-  std::cout << test_odom << std::endl;
-  std::cout << test_scan << std::endl;
-  controller_.update();
+  double x = odom->pose.pose.position.x;
+  double y = odom->pose.pose.position.y;
+  double theta = odom->pose.pose.orientation.z;
+  std::vector<double> lidar_data(scan->ranges.begin(), scan->ranges.end());
+  std::vector<double> robot_state = {x, y, theta};
+  controller_.update(robot_state, lidar_data);
+  std::vector<double> new_robot_state = controller_.get_robot_state();
+  RCLCPP_INFO(this->get_logger(), "Robot state: %f, %f, %f", new_robot_state[0], new_robot_state[1], new_robot_state[2]);
+  std::vector<double> new_lidar_data = controller_.get_lidar_data();
+  RCLCPP_INFO(this->get_logger(), "Lidar data: %f", new_lidar_data[0]);
   RCLCPP_INFO(this->get_logger(), "Current state: %s", controller_.state().name().data());
 
   // cmd_vel_pub_->publish(cmd_vel_msg_);

@@ -6,11 +6,11 @@ std::string_view ModeC::name() const
   return "ModeC";
 }
 
-void ModeC::handle(Controller& ctx)
+void ModeC::handle(Controller& ctrl)
 {
-  ctx.incrementCount();
+  ctrl.increment_count();
 
-  if (ctx.count() >= 9) {
-    ctx.setState(std::make_unique<ModeA>());
+  if (ctrl.count() >= 9) {
+    ctrl.set_state(std::make_unique<ModeA>());
   }
 }
