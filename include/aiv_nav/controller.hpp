@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cstdint>
 #include <string_view>
 
 #include "aiv_nav/companion_disk.hpp"
@@ -76,6 +77,11 @@ public:
   const std::vector<double>& get_lidar_data() const;
 
   /**
+   * @brief Get min distance from lidar data
+   */
+  const double& get_min_dist() const;
+
+  /**
    * @brief Increment internal counter
    */
   void increment_count();
@@ -96,13 +102,16 @@ private:
   const double rho_0_;
 
   // Robot states
-  std::vector<double> robot_state_{0.0, 0.0, 0.0}; // [x, y, theta]
-  std::vector<double> lidar_data_;
+  std::vector<double> robot_state_{};
+  std::vector<double> lidar_data_{};
+  std::vector<double> lidar_points_{};
+  double min_dist_{0};
 
   // Companion disk
   CompanionDisk disk_;
 
-  double u_ = 0.0;  // Output control signal
+  // Output control signal
+  double u_ = 0.0;
 
   int count_ = 0;
 
@@ -116,13 +125,14 @@ private:
    * @brief Set new robot state
    * @param robot_state New robot state
    */
-   void set_robot_state_(const std::vector<double>& robot_state);
+   void update_robot_state_(const std::vector<double>& robot_state);
 
    /**
    * @brief Set new lidar data
    * @param lidar_data New lidar data
    */
-   void set_lidar_data_(const std::vector<double>& lidar_data);
+   void update_lidar_data_(const std::vector<double>& lidar_data);
+   
 };
 
 /**
@@ -133,6 +143,8 @@ class ModeA : public State
 public:
   void handle(Controller& context) override;
   std::string_view name() const override;
+
+  double calculate_control_signal(const Controller& context) const override;
 };
 
 /**
@@ -143,6 +155,8 @@ class ModeC : public State
 public:
   void handle(Controller& context) override;
   std::string_view name() const override;
+
+  double calculate_control_signal(const Controller& context) const override;
 };
 
 /**
@@ -153,4 +167,6 @@ class ModeG : public State
 public:
   void handle(Controller& context) override;
   std::string_view name() const override;
+
+  double calculate_control_signal(const Controller& context) const override;
 };

@@ -85,9 +85,10 @@ void AIVController::syncCallback(
   std::vector<double> robot_state = {x, y, theta};
   controller_.update(robot_state, lidar_data);
   std::vector<double> new_robot_state = controller_.get_robot_state();
-  RCLCPP_INFO(this->get_logger(), "Robot state: %f, %f, %f", new_robot_state[0], new_robot_state[1], new_robot_state[2]);
+  // RCLCPP_INFO(this->get_logger(), "Robot state: %f, %f, %f", new_robot_state[0], new_robot_state[1], new_robot_state[2]);
   std::vector<double> new_lidar_data = controller_.get_lidar_data();
-  RCLCPP_INFO(this->get_logger(), "Lidar data: %f", new_lidar_data[0]);
+  // RCLCPP_INFO(this->get_logger(), "Lidar data: %f", new_lidar_data[0]);
+  RCLCPP_INFO(this->get_logger(), "Min distance: %f", controller_.get_min_dist());
   RCLCPP_INFO(this->get_logger(), "Current state: %s", controller_.state().name().data());
 
   // cmd_vel_pub_->publish(cmd_vel_msg_);
