@@ -10,11 +10,14 @@ Controller::Controller(std::unique_ptr<State> init_state,
                        double angular_velocity,
                        double rho_0,
                        double R_epsilon,
+                       double R_vis,
                        int resolution)
     : state_(std::move(init_state))
     , linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , rho_0_(rho_0)
+    , R_vis_(R_vis)
+    , resolution_(resolution)
     , disk_(R_min_, resolution)
 {
   R_min_ = linear_velocity / angular_velocity + R_epsilon;
@@ -22,13 +25,10 @@ Controller::Controller(std::unique_ptr<State> init_state,
 
 void Controller::update(const std::vector<double>& robot_state, const std::vector<double>& lidar_data)
 {
-  update_robot_state_(robot_state);
-  update_lidar_data_(lidar_data);
+  set_robot_state_(robot_state);
+  set_lidar_data_(lidar_data);
 
-  // TODO: Added calculating lidar rays
-  // Calculating min params
-  // Calculating disk rays and poses
-  //
+
 
   if (state_) {
     state_->handle(*this);
@@ -62,19 +62,36 @@ double Controller::get_control_signal() const
   return u_;
 }
 
-void Controller::update_robot_state_(const std::vector<double>& robot_state)
+void Controller::set_robot_state_(const std::vector<double>& robot_state)
 {
   robot_state_ = robot_state;
 }
 
-void Controller::update_lidar_data_(const std::vector<double>& lidar_data)
+void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
 {
   lidar_data_ = lidar_data;
-
   min_dist_ = std::numeric_limits<double>::infinity();
-  for (double range : lidar_data_) {
-      if (std::isfinite(range) && range < min_dist_)
-          min_dist_ = range;
+  lidar_points_.clear();
+  for (size_t i = 0; i < resolution_; ++i) {
+    // Find min distance
+    if (std::isfinite(lidar_data_[i]) && lidar_data_[i] < min_dist_) {
+      min_dist_ = lidar_data_[i];
+    }
+
+    // Calculate lidar points
+    if (lidar_data_[i] < R_vis_) {
+      double lidar_point_x = lidar_data_[i] * std::cos(robot_state_[2] + i * 2 * M_PI / resolution_);
+      double lidar_point_y = lidar_data_[i] * std::sin(robot_state_[2] + i * 2 * M_PI / resolution_);
+      std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
+      lidar_points_.push_back(lidar_point);
+    }
+    else {
+      // Calculate lidar points if lidar data > R_vis_
+      double lidar_point_x = R_vis_ * std::cos(robot_state_[2] + i * 2 * M_PI / resolution_);
+      double lidar_point_y = R_vis_ * std::sin(robot_state_[2] + i * 2 * M_PI / resolution_);
+      std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
+      lidar_points_.push_back(lidar_point);
+    }
   }
 }
 
@@ -91,4 +108,9 @@ const std::vector<double>& Controller::get_lidar_data() const
 const double& Controller::get_min_dist() const
 {
   return min_dist_;
+}
+
+const std::vector<std::vector<double>>& Controller::get_lidar_points() const
+{
+  return lidar_points_;
 }

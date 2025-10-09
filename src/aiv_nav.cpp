@@ -36,7 +36,7 @@ private:
   // Test pole values
   
   
-  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 360 };
+  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 12.0, 360 };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
@@ -87,8 +87,10 @@ void AIVController::syncCallback(
   std::vector<double> new_robot_state = controller_.get_robot_state();
   // RCLCPP_INFO(this->get_logger(), "Robot state: %f, %f, %f", new_robot_state[0], new_robot_state[1], new_robot_state[2]);
   std::vector<double> new_lidar_data = controller_.get_lidar_data();
+  std::vector<std::vector<double>> new_lidar_points = controller_.get_lidar_points();
   // RCLCPP_INFO(this->get_logger(), "Lidar data: %f", new_lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Min distance: %f", controller_.get_min_dist());
+  RCLCPP_INFO(this->get_logger(), "Lidar points: %f, %f", new_lidar_points[0][0], new_lidar_points[0][1]);
+  // RCLCPP_INFO(this->get_logger(), "Min distance: %f", controller_.get_min_dist());
   RCLCPP_INFO(this->get_logger(), "Current state: %s", controller_.state().name().data());
 
   // cmd_vel_pub_->publish(cmd_vel_msg_);

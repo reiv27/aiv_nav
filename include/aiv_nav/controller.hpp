@@ -37,6 +37,7 @@ public:
              double angular_velocity,
              double rho_0,
              double R_epsilon,
+             double R_vis,
              int resolution);
   
   Controller(const Controller&) = delete;
@@ -82,6 +83,11 @@ public:
   const double& get_min_dist() const;
 
   /**
+   * @brief Get lidar points
+   */
+   const std::vector<std::vector<double>>& get_lidar_points() const;
+
+  /**
    * @brief Increment internal counter
    */
   void increment_count();
@@ -100,11 +106,15 @@ private:
   const double angular_velocity_;
   double R_min_;
   const double rho_0_;
+  const double R_vis_;
 
   // Robot states
   std::vector<double> robot_state_{};
+
+  // Lidar data
+  uint64_t resolution_;
   std::vector<double> lidar_data_{};
-  std::vector<double> lidar_points_{};
+  std::vector<std::vector<double>> lidar_points_{};
   double min_dist_{0};
 
   // Companion disk
@@ -125,14 +135,13 @@ private:
    * @brief Set new robot state
    * @param robot_state New robot state
    */
-   void update_robot_state_(const std::vector<double>& robot_state);
+   void set_robot_state_(const std::vector<double>& robot_state);
 
    /**
    * @brief Set new lidar data
    * @param lidar_data New lidar data
    */
-   void update_lidar_data_(const std::vector<double>& lidar_data);
-   
+   void set_lidar_data_(const std::vector<double>& lidar_data);
 };
 
 /**
