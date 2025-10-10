@@ -12,6 +12,12 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <rmw/types.h>
+// tf2
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
+
 
 // Controller
 #include "aiv_nav/controller.hpp"
@@ -46,7 +52,7 @@ public:
   {
     // Configure subscribers through message_filters::Subscriber
     odom_sub_ = std::make_shared<message_filters::Subscriber<nav_msgs::msg::Odometry>>(
-      this, "/odom", rmw_qos_profile_sensor_data);                                  // ★
+      this, "/odom", rmw_qos_profile_sensor_data);
     
     scan_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>(
       this, "/scan", rmw_qos_profile_sensor_data);
@@ -73,14 +79,18 @@ public:
   }
 };
 
-void AIVController::syncCallback(
-  const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
-  const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
+void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
+                                 const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
-  //   RCLCPP_INFO(this->get_logger(), "Got msg: %f", msg.ranges[0]);
-  double x = odom->pose.pose.position.x;
-  double y = odom->pose.pose.position.y;
-  double theta = odom->pose.pose.orientation.z;
+  tf2::Quaternion q;
+  tf2::fromMsg(odom->pose.pose.orientation, q);
+  double roll, pitch, yaw;
+  tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+  const double x = odom->pose.pose.position.x;
+  const double y = odom->pose.pose.position.y;
+  const double theta = yaw;
+
   std::vector<double> lidar_data(scan->ranges.begin(), scan->ranges.end());
   std::vector<double> robot_state = {x, y, theta};
   controller_.update(robot_state, lidar_data);

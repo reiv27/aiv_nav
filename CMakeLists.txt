@@ -14,6 +14,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 # ===== Source Files Organization =====
 # Controller library sources
@@ -48,7 +51,7 @@ add_executable(aiv_nav ${MAIN_SOURCES})
 target_link_libraries(aiv_nav aiv_nav_controller)
 
 # Set dependencies for the executable
-ament_target_dependencies(aiv_nav rclcpp std_msgs sensor_msgs geometry_msgs message_filters nav_msgs)
+ament_target_dependencies(aiv_nav rclcpp std_msgs sensor_msgs geometry_msgs message_filters nav_msgs tf2 tf2_ros tf2_geometry_msgs)
 
 # Set C++ standard for the executable
 target_compile_features(aiv_nav PUBLIC c_std_99 cxx_std_17)
@@ -81,7 +84,7 @@ install(DIRECTORY include/
 # Export the library for other packages
 ament_export_targets(aiv_nav_controllerTargets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
-ament_export_dependencies(rclcpp std_msgs sensor_msgs geometry_msgs message_filters nav_msgs)
+ament_export_dependencies(rclcpp std_msgs sensor_msgs geometry_msgs message_filters nav_msgs tf2 tf2_ros tf2_geometry_msgs)
 
 # ===== Testing =====
 if(BUILD_TESTING)
