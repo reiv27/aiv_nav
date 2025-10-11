@@ -28,8 +28,6 @@ void Controller::update(const std::vector<double>& robot_state, const std::vecto
   set_robot_state_(robot_state);
   set_lidar_data_(lidar_data);
 
-
-
   if (state_) {
     state_->handle(*this);
   }
@@ -72,10 +70,13 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
   lidar_data_ = lidar_data;
   min_dist_ = std::numeric_limits<double>::infinity();
   lidar_points_.clear();
+
+  size_t min_idx = 0;
   for (size_t i = 0; i < resolution_; ++i) {
     // Find min distance
     if (std::isfinite(lidar_data_[i]) && lidar_data_[i] < min_dist_) {
       min_dist_ = lidar_data_[i];
+      min_idx = i;
     }
 
     // Calculate lidar points
@@ -92,6 +93,10 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
       std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
       lidar_points_.push_back(lidar_point);
     }
+    lidar_closest_point_ = lidar_points_[min_idx];
+
+    // Calculate companion disk rays length
+
   }
 }
 
@@ -105,7 +110,7 @@ const std::vector<double>& Controller::get_lidar_data() const
   return lidar_data_;
 }
 
-const double& Controller::get_min_dist() const
+double Controller::get_min_dist() const
 {
   return min_dist_;
 }
@@ -113,4 +118,9 @@ const double& Controller::get_min_dist() const
 const std::vector<std::vector<double>>& Controller::get_lidar_points() const
 {
   return lidar_points_;
+}
+
+const std::vector<double>& Controller::get_closest_lidar_point() const
+{
+  return lidar_closest_point_;
 }

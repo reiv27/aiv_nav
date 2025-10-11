@@ -80,12 +80,18 @@ public:
   /**
    * @brief Get min distance from lidar data
    */
-  const double& get_min_dist() const;
+  double get_min_dist() const;
 
   /**
    * @brief Get lidar points
    */
-   const std::vector<std::vector<double>>& get_lidar_points() const;
+  const std::vector<std::vector<double>>& get_lidar_points() const;
+
+
+  /**
+   * @brief Get lidar closest point
+   */
+  const std::vector<double>& get_closest_lidar_point() const;
 
   /**
    * @brief Increment internal counter
@@ -115,7 +121,8 @@ private:
   uint64_t resolution_;
   std::vector<double> lidar_data_{};
   std::vector<std::vector<double>> lidar_points_{};
-  double min_dist_{0};
+  std::vector<double> lidar_closest_point_{0.0, 0.0};
+  double min_dist_{0.0};
 
   // Companion disk
   CompanionDisk disk_;
@@ -154,6 +161,10 @@ public:
   std::string_view name() const override;
 
   double calculate_control_signal(const Controller& context) const override;
+
+private:
+  bool goal_flag_{true};
+  double goal_angle_{0.0};
 };
 
 /**
