@@ -28,6 +28,14 @@ public:
 
 /**
  * @brief Main controller class
+ * @param init_state Initial state of the controller
+ * @param linear_velocity Linear velocity
+ * @param angular_velocity Angular velocity
+ * @param rho_0 rho_0
+ * @param R_epsilon R_epsilon
+ * @param R_vis LiDAR visibility radius
+ * @param resolution LiDAR resolution
+ * @param lidar_angle_offset LiDAR angle offset
  */
 class Controller final
 {
@@ -38,7 +46,8 @@ public:
              double rho_0,
              double R_epsilon,
              double R_vis,
-             int resolution);
+             int resolution,
+             double lidar_angle_offset);
   
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -119,6 +128,7 @@ private:
 
   // Lidar data
   uint64_t resolution_;
+  double lidar_angle_offset_{0.0};
   std::vector<double> lidar_data_{};
   std::vector<std::vector<double>> lidar_points_{};
   std::vector<double> lidar_closest_point_{0.0, 0.0};

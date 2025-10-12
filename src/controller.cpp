@@ -11,13 +11,15 @@ Controller::Controller(std::unique_ptr<State> init_state,
                        double rho_0,
                        double R_epsilon,
                        double R_vis,
-                       int resolution)
+                       int resolution,
+                       double lidar_angle_offset)
     : state_(std::move(init_state))
     , linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , rho_0_(rho_0)
     , R_vis_(R_vis)
     , resolution_(resolution)
+    , lidar_angle_offset_(lidar_angle_offset)
     , disk_(R_min_, resolution)
 {
   R_min_ = linear_velocity / angular_velocity + R_epsilon;
@@ -80,22 +82,16 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
     }
 
     // Calculate lidar points
-    if (lidar_data_[i] < R_vis_) {
-      double lidar_point_x = lidar_data_[i] * std::cos(robot_state_[2] + i * 2 * M_PI / resolution_);
-      double lidar_point_y = lidar_data_[i] * std::sin(robot_state_[2] + i * 2 * M_PI / resolution_);
-      std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
-      lidar_points_.push_back(lidar_point);
-    }
-    else {
-      // Calculate lidar points if lidar data > R_vis_
-      double lidar_point_x = R_vis_ * std::cos(robot_state_[2] + i * 2 * M_PI / resolution_);
-      double lidar_point_y = R_vis_ * std::sin(robot_state_[2] + i * 2 * M_PI / resolution_);
-      std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
-      lidar_points_.push_back(lidar_point);
-    }
-    lidar_closest_point_ = lidar_points_[min_idx];
+    // indexes of lidar points are increasing in counter-clockwise direction
+    const double angle = robot_state_[2] + lidar_angle_offset_ + i * 2 * M_PI / resolution_;
+    const double range = std::min(lidar_data_[i], R_vis_);
+    const double lidar_point_x = range * std::cos(angle);
+    const double lidar_point_y = range * std::sin(angle);
+    const std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
+    lidar_points_.push_back(lidar_point);
+    lidar_closest_point_ = lidar_points_[min_idx]; 
 
-    // Calculate companion disk rays length
+    // TODO: Calculate companion disk rays length
 
   }
 }

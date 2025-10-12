@@ -42,7 +42,7 @@ private:
   // Test pole values
   
   
-  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 8.0, 360 };
+  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 8.0, 360, M_PI };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
