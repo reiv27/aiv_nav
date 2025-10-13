@@ -23,7 +23,7 @@ public:
    * @param context Controller context
    * @return Control signal
    */
-  virtual double calculate_control_signal(const Controller& context) const = 0;
+  virtual double calculate_control_signal(const Controller& context) = 0;
 };
 
 /**
@@ -103,6 +103,11 @@ public:
   const std::vector<double>& get_closest_lidar_point() const;
 
   /**
+   * @brief Get angular velocity
+   */
+  double get_angular_velocity() const;
+
+  /**
    * @brief Increment internal counter
    */
   void increment_count();
@@ -170,7 +175,7 @@ public:
   void handle(Controller& context) override;
   std::string_view name() const override;
 
-  double calculate_control_signal(const Controller& context) const override;
+  double calculate_control_signal(const Controller& context) override;
 
 private:
   bool goal_flag_{true};
@@ -186,7 +191,7 @@ public:
   void handle(Controller& context) override;
   std::string_view name() const override;
 
-  double calculate_control_signal(const Controller& context) const override;
+  double calculate_control_signal(const Controller& context) override;
 };
 
 /**
@@ -198,5 +203,5 @@ public:
   void handle(Controller& context) override;
   std::string_view name() const override;
 
-  double calculate_control_signal(const Controller& context) const override;
+  double calculate_control_signal(const Controller& context) override;
 };

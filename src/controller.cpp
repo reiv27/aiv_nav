@@ -120,3 +120,8 @@ const std::vector<double>& Controller::get_closest_lidar_point() const
 {
   return lidar_closest_point_;
 }
+
+double Controller::get_angular_velocity() const
+{
+  return angular_velocity_;
+}

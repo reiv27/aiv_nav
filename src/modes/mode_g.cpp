@@ -14,3 +14,8 @@ void ModeG::handle(Controller& ctrl)
     ctrl.set_state(std::make_unique<ModeC>());
   }
 }
+
+double ModeG::calculate_control_signal(const Controller& ctrl)
+{
+  return 0.0;
+}
