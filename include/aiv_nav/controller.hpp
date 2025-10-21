@@ -108,6 +108,11 @@ public:
   double get_angular_velocity() const;
 
   /**
+   * @brief Get linear velocity
+   */
+  double get_linear_velocity() const;
+
+  /**
    * @brief Increment internal counter
    */
   void increment_count();

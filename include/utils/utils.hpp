@@ -4,16 +4,6 @@
 namespace utils
 {
 /**
-* @brief Normalize angle to be between -M_PI and M_PI
-* @param angle Angle to normalize
-*/
-inline void normalize_angle(double& angle)
-{
-  while (angle > M_PI) angle -= 2 * M_PI;
-  while (angle < -M_PI) angle += 2 * M_PI;
-}
-
-/**
 * @brief Sign function
 * @param x Value to get sign of
 * @return Sign of x

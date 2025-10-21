@@ -42,7 +42,7 @@ private:
   // Test pole values
   
   
-  Controller controller_{ std::make_unique<ModeA>(), 0.0, 0.0, 0.0, 0.0, 8.0, 360, M_PI };
+  Controller controller_{ std::make_unique<ModeA>(), 0.5, 1.0, 1.0, 0.1, 8.0, 360, M_PI };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
@@ -82,32 +82,27 @@ public:
 void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
                                  const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
+  // Convert odometry orientation to yaw
   tf2::Quaternion q;
   tf2::fromMsg(odom->pose.pose.orientation, q);
   double roll, pitch, yaw;
   tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
-
   const double x = odom->pose.pose.position.x;
   const double y = odom->pose.pose.position.y;
   const double theta = yaw;
-
   std::vector<double> lidar_data(scan->ranges.begin(), scan->ranges.end());
   std::vector<double> robot_state = {x, y, theta};
-  controller_.update(robot_state, lidar_data);
-  std::vector<double> new_robot_state = controller_.get_robot_state();
-  // RCLCPP_INFO(this->get_logger(), "Robot state: %f, %f, %f", new_robot_state[0], new_robot_state[1], new_robot_state[2]);
-  std::vector<double> new_lidar_data = controller_.get_lidar_data();
-  std::vector<std::vector<double>> new_lidar_points = controller_.get_lidar_points();
-  std::vector<double> new_closest_lidar_point = controller_.get_closest_lidar_point();
-  // RCLCPP_INFO(this->get_logger(), "Lidar data: %f", new_lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Lidar points: %f, %f",
-              new_lidar_points[0][0], new_lidar_points[0][1]);
-  RCLCPP_INFO(this->get_logger(), "Lidar closest point: %f, %f",
-              new_closest_lidar_point[0], new_closest_lidar_point[1]);
-  // RCLCPP_INFO(this->get_logger(), "Min distance: %f", controller_.get_min_dist());
-  RCLCPP_INFO(this->get_logger(), "Current state: %s", controller_.state().name().data());
 
-  // cmd_vel_pub_->publish(cmd_vel_msg_);
+  // Update controller with new robot state and lidar data
+  controller_.update(robot_state, lidar_data);
+
+  // Debug output
+  std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
+
+  // Publish control signal
+  cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
+  cmd_vel_msg_.angular.z = controller_.get_control_signal();
+  cmd_vel_pub_->publish(cmd_vel_msg_);
 }
 
 int main(int argc, char * argv[])

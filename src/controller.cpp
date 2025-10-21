@@ -85,8 +85,8 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
     // indexes of lidar points are increasing in counter-clockwise direction
     const double angle = robot_state_[2] + lidar_angle_offset_ + i * 2 * M_PI / resolution_;
     const double range = std::min(lidar_data_[i], R_vis_);
-    const double lidar_point_x = range * std::cos(angle);
-    const double lidar_point_y = range * std::sin(angle);
+    const double lidar_point_x = robot_state_[0] + range * std::cos(angle);
+    const double lidar_point_y = robot_state_[1] + range * std::sin(angle);
     const std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
     lidar_points_.push_back(lidar_point);
     lidar_closest_point_ = lidar_points_[min_idx]; 
@@ -124,4 +124,9 @@ const std::vector<double>& Controller::get_closest_lidar_point() const
 double Controller::get_angular_velocity() const
 {
   return angular_velocity_;
+}
+
+double Controller::get_linear_velocity() const
+{
+  return linear_velocity_;
 }
