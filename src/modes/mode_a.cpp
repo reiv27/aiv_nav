@@ -11,7 +11,9 @@ std::string_view ModeA::name() const
 
 void ModeA::handle(Controller& ctrl)
 {
-  ctrl.increment_count();
+  if (ctrl.get_min_dist() < (ctrl.get_rho_0() + ctrl.get_R_min())) {
+    ctrl.set_state(std::make_unique<ModeC>());
+  }
 }
 
 double ModeA::calculate_control_signal(const Controller& ctrl)
