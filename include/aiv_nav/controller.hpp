@@ -77,6 +77,13 @@ public:
   double get_control_signal() const;
 
   /**
+   * @brief Get output linear velocity
+   */
+  double get_v_() const {
+    return v_;
+  }
+
+  /**
    * @brief Get robot state
    */
   const std::vector<double>& get_robot_state() const;
@@ -96,7 +103,6 @@ public:
    */
   const std::vector<std::vector<double>>& get_lidar_points() const;
 
-
   /**
    * @brief Get lidar closest point
    */
@@ -111,6 +117,21 @@ public:
    * @brief Get linear velocity
    */
   double get_linear_velocity() const;
+
+  /**
+   * @brief Get R_min
+   */
+  double get_R_min() const;
+
+  /**
+   * @brief Get rho_0
+   */
+  double get_rho_0() const;
+
+  /**
+   * @brief Get companion disk pose
+   */
+  const std::vector<double>& get_disk_pose() const;
 
   /**
    * @brief Increment internal counter
@@ -148,9 +169,10 @@ private:
   CompanionDisk disk_;
 
   // Output control signal
-  double u_ = 0.0;
+  double u_{0.0};
+  double v_{linear_velocity_};
 
-  int count_ = 0;
+  int count_{0};
 
   /**
    * @brief Set output control signal
@@ -158,8 +180,9 @@ private:
    */
    void set_control_signal_(double u);
 
+   //TODO: Change name  set_robot_state() to something
    /**
-   * @brief Set new robot state
+   * @brief Set new robot state (x, y, theta) !!!NOT FSM STATE!!!
    * @param robot_state New robot state
    */
    void set_robot_state_(const std::vector<double>& robot_state);

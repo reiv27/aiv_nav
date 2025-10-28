@@ -16,16 +16,17 @@ Controller::Controller(std::unique_ptr<State> init_state,
     : state_(std::move(init_state))
     , linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
+    , R_min_{ linear_velocity / angular_velocity + R_epsilon }
     , rho_0_(rho_0)
     , R_vis_(R_vis)
     , resolution_(resolution)
     , lidar_angle_offset_(lidar_angle_offset)
-    , disk_(R_min_, resolution)
+    , disk_{ R_min_, resolution_ }
 {
-  R_min_ = linear_velocity / angular_velocity + R_epsilon;
 }
 
-void Controller::update(const std::vector<double>& robot_state, const std::vector<double>& lidar_data)
+void Controller::update(const std::vector<double>& robot_state,
+                        const std::vector<double>& lidar_data)
 {
   set_robot_state_(robot_state);
   set_lidar_data_(lidar_data);
@@ -34,6 +35,10 @@ void Controller::update(const std::vector<double>& robot_state, const std::vecto
     state_->handle(*this);
   }
 
+  // Debug v_
+  if (state_->name() == "ModeC") {
+    v_ = 0.0;
+  }
   u_ = state_->calculate_control_signal(*this);
 }
 
@@ -91,8 +96,7 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
     lidar_points_.push_back(lidar_point);
     lidar_closest_point_ = lidar_points_[min_idx]; 
 
-    // TODO: Calculate companion disk rays length
-
+    disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
   }
 }
 
@@ -129,4 +133,19 @@ double Controller::get_angular_velocity() const
 double Controller::get_linear_velocity() const
 {
   return linear_velocity_;
+}
+
+double Controller::get_R_min() const
+{
+  return R_min_;
+}
+
+double Controller::get_rho_0() const
+{
+  return rho_0_;
+}
+
+const std::vector<double>& Controller::get_disk_pose() const
+{
+  return disk_.get_pose();
 }
