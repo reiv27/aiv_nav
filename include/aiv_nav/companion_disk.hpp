@@ -10,11 +10,6 @@ public:
   CompanionDisk(double R, uint64_t resolution, uint64_t window_size);
 
   /**
-   * @brief Update disk data
-   */
-  void update_disk_data();
-
-  /**
    * @brief Get disk pose
    * @return Disk pose (x, y)
    */
@@ -35,6 +30,12 @@ public:
   void update_pose(const std::vector<double>& robot_state,
                    const std::vector<double>& lidar_closest_point, double distance);
 
+  /**
+   * @brief Update rays length
+   * @param lidar_points Lidar points
+   */
+  void update_rays_length(const std::vector<std::vector<double>>& lidar_points);
+  
 private:
   double R_;
   const uint64_t resolution_;
@@ -43,4 +44,5 @@ private:
   std::vector<double> pose_{0.0, 0.0};
   std::vector<double> rays_length_;
   double min_ray_length_{0.0};
+  int min_arg_{0};
 };
