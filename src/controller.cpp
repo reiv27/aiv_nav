@@ -12,7 +12,8 @@ Controller::Controller(std::unique_ptr<State> init_state,
                        double R_epsilon,
                        double R_vis,
                        int resolution,
-                       double lidar_angle_offset)
+                       double lidar_angle_offset,
+                       uint64_t window_size)
     : state_(std::move(init_state))
     , linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
@@ -21,7 +22,7 @@ Controller::Controller(std::unique_ptr<State> init_state,
     , R_vis_(R_vis)
     , resolution_(resolution)
     , lidar_angle_offset_(lidar_angle_offset)
-    , disk_{ R_min_, resolution_ }
+    , disk_{ R_min_, resolution_, window_size }
 {
 }
 

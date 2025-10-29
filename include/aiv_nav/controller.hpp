@@ -47,7 +47,8 @@ public:
              double R_epsilon,
              double R_vis,
              int resolution,
-             double lidar_angle_offset);
+             double lidar_angle_offset,
+             uint64_t window_size=0);
   
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;

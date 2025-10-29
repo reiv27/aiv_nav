@@ -1,6 +1,9 @@
 #include <memory>
 #include <vector>
 
+#include <fstream>
+#include <iomanip>
+
 #include "rclcpp/rclcpp.hpp"
 // Messages
 #include "std_msgs/msg/string.hpp"
@@ -28,7 +31,8 @@ class AIVController : public rclcpp::Node
 {
 private:
 
-  // Message filters trick: synchronize Odometry and LaserScan messages using message_filters subscribers and synchronizer
+  // Message filters trick: synchronize Odometry and LaserScan messages
+  // using message_filters subscribers and synchronizer
   std::shared_ptr<message_filters::Subscriber<nav_msgs::msg::Odometry>> odom_sub_;
   std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::LaserScan>> scan_sub_;
   std::shared_ptr<message_filters::Synchronizer<
@@ -38,14 +42,35 @@ private:
   void syncCallback(
     const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
     const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
-  
-  // Test pole values
-  
-  
-  Controller controller_{ std::make_unique<ModeA>(), 0.5, 1.0, 1.0, 0.1, 8.0, 360, M_PI };
+ 
+  double linear_velocity = 0.5;
+  double angular_velocity = 1.0;
+  double rho_0 = 1.0;
+  double R_epsilon = 0.1;
+  double R_vis = 8.0;
+  int resolution = 360;
+  double lidar_angle_offset = M_PI;
+  uint64_t window_size = 10;
+  Controller controller_
+  {
+    std::make_unique<ModeA>(),
+    linear_velocity,
+    angular_velocity,
+    rho_0,
+    R_epsilon,
+    R_vis,
+    resolution,
+    lidar_angle_offset,
+    window_size
+  };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
+
+  // CSV logging
+  std::ofstream log_file_;
+  int log_iteration_ = 0;
+  bool log_header_written_ = false;
 
 public:
   AIVController() : Node("aiv_nav")
@@ -76,6 +101,22 @@ public:
                 std::placeholders::_1, std::placeholders::_2));
 
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+
+    // Open log file
+    log_file_.open(
+      "/home/user/projects/ros2_ws/src/aiv_nav_controller/debug/controller_telemetry.csv",
+      std::ios::out | std::ios::trunc
+    );
+    if (log_file_.is_open()) {
+      // Write CSV header
+      // log_file_ << "state,x,y,theta,R_min,rho_0,min_dist,"
+      //           << "closest_lidar_x,closest_lidar_y,disk_x,disk_y\n";
+      // log_file_.flush();
+      std::cout << "Logging to: debug/controller_telemetry.csv" << std::endl;
+      // RCLCPP_INFO_ONCE(this->get_logger(), "Logging to: debug/controller_telemetry.csv");
+    } else {
+      std::cout << "Failed to open log file!" << std::endl;
+    }
   }
 };
 
@@ -96,11 +137,34 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   // Update controller with new robot state and lidar data
   controller_.update(robot_state, lidar_data);
 
+
+  // Log telemetry data
+  // state,x,y,theta,R_min,rho_0,min_dist,closest_lidar_x,closest_lidar_y,disk_x,disk_y
+  if (log_file_.is_open()) {
+    log_file_ 
+              // << controller_.state().name() << ","
+              << robot_state[0] << ","
+              << robot_state[1] << ","
+              << robot_state[2] << ","
+              << controller_.get_R_min() << ","
+              << controller_.get_rho_0() << ","
+              << controller_.get_min_dist() << ","
+              << controller_.get_closest_lidar_point()[0] << ","
+              << controller_.get_closest_lidar_point()[1] << ","
+              << controller_.get_disk_pose()[0] << ","
+              << controller_.get_disk_pose()[1] << "\n";
+    log_file_.flush();
+  }
+  
   // Debug output
   std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
+  // std::cout << "Mode: " << controller_.state().name() << std::endl;
+  // std::cout << "Robot state: " << robot_state[0] << ", " << robot_state[1]  << std::endl;
+  // std::cout << "Disk pose: " << controller_.get_disk_pose()[0] << ", "
+  //           << controller_.get_disk_pose()[1] << std::endl << std::endl;g
 
   // Publish control signal
-  cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
+  cmd_vel_msg_.linear.x = controller_.get_v_();
   cmd_vel_msg_.angular.z = controller_.get_control_signal();
   cmd_vel_pub_->publish(cmd_vel_msg_);
 }

@@ -2,10 +2,11 @@
 
 #include <cmath>
 
-CompanionDisk::CompanionDisk(double R, uint64_t resolution)
+CompanionDisk::CompanionDisk(double R, uint64_t resolution, uint64_t window_size)
     : R_(R)
     , resolution_(resolution)
-    , rays_length_(resolution, 0.0)
+    , window_size_(window_size)
+    , rays_length_(resolution_, 0.0)
     , min_ray_length_(0.0)
 {
 }

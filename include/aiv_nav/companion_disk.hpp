@@ -7,7 +7,7 @@
 class CompanionDisk
 {
 public:
-  CompanionDisk(double R, uint64_t resolution);
+  CompanionDisk(double R, uint64_t resolution, uint64_t window_size);
 
   /**
    * @brief Update disk data
@@ -38,6 +38,7 @@ public:
 private:
   double R_;
   const uint64_t resolution_;
+  const uint64_t window_size_;
 
   std::vector<double> pose_{0.0, 0.0};
   std::vector<double> rays_length_;
