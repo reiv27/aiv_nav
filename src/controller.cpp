@@ -1,3 +1,4 @@
+#include "aiv_nav/states.hpp"
 #include "aiv_nav/controller.hpp"
 #include "aiv_nav/companion_disk.hpp"
 
@@ -40,15 +41,18 @@ void Controller::update(const std::vector<double>& robot_state,
     state_->handle(*this);
   }
 
-  // Debug v_
-  // if (state_->name() == "ModeC" or state_->name() == "ModeG") {
-  //   v_ = 0.0;
-  // }
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  const double t_current = std::chrono::duration<double>(duration).count();
+  dt_ = t_current - t_prev_;
+  t_prev_ = t_current;
 
-  update_control_parameters();
+  if (state_->name() == "ModeG") {
+    v_ = 0.0;
+  }
+
   u_ = state_->calculate_control_signal(*this);
 }
-
 
 void Controller::set_state(std::unique_ptr<State> s)
 {
@@ -149,22 +153,19 @@ const std::vector<double>& Controller::get_disk_pose() const
   return disk_.get_pose();
 }
 
-void Controller::update_control_parameters()
+double Controller::get_dt()
 {
-  auto now = std::chrono::system_clock::now();
-  auto duration = now.time_since_epoch();
-  double t_current = std::chrono::duration<double>(duration).count();
-  std::cout << "dt: " << t_current - t_prev_ << std::endl;
-
-  dR_ = min_dist_ - rho_0_;
-  ddR_ = (dR_ - dR_prev_) / (t_current - t_prev_);
-  t_prev_ = t_current;
-  dR_prev_ = dR_;
+  return dt_;
 }
 
-double Controller::get_dR() const
+double Controller::get_dR_prev() const
 {
-  return dR_;
+  return dR_prev_;
+}
+
+void Controller::set_dR_prev(double dR_prev)
+{
+  dR_prev_ = dR_prev;
 }
 
 double Controller::get_nu() const
@@ -172,7 +173,17 @@ double Controller::get_nu() const
   return nu_;
 }
 
-double Controller::get_dR_diff() const
+double Controller::get_disk_min_ray_length() const
 {
-  return ddR_;
+  return disk_.get_min_ray_length();
+}
+
+void Controller::set_verA(const std::vector<double>& verA)
+{
+  verA_ = verA;
+}
+
+const std::vector<double>& Controller::get_verA() const
+{
+  return verA_;
 }

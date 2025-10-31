@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <vector>
 #include <cstdint>
 
@@ -35,6 +34,12 @@ public:
    * @param lidar_points Lidar points
    */
   void update_rays_length(const std::vector<std::vector<double>>& lidar_points);
+
+  /**
+   * @brief Get disk min length
+   * @return Disk min length
+   */
+  double get_min_ray_length() const;
   
 private:
   double R_;

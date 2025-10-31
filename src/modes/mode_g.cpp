@@ -1,4 +1,6 @@
 #include <iostream>
+#include "utils/utils.hpp"
+#include "aiv_nav/states.hpp"
 #include "aiv_nav/controller.hpp"
 
 std::string_view ModeG::name() const
@@ -11,7 +13,14 @@ void ModeG::handle(Controller& ctrl)
 
 }
 
-double ModeG::calculate_control_signal(const Controller& ctrl)
+double ModeG::calculate_control_signal(Controller& ctrl)
 {
+  const double dR = ctrl.get_R_min() - utils::norm2(ctrl.get_verA(), ctrl.get_robot_state());
+  const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
+  ctrl.set_dR_prev(dR);
+  const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
+  const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
+  const double sign = utils::sign(ddR + second_part);
+  // return ctrl.get_angular_velocity() * sign;
   return 0.0;
 }

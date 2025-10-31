@@ -44,7 +44,7 @@ private:
     const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
  
   double linear_velocity = 0.5;
-  double angular_velocity = 1.0;
+  double angular_velocity = 2.0;
   double rho_0 = 1.0;
   double R_epsilon = 0.1;
   double R_vis = 8.0;
@@ -160,7 +160,7 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   
   // Debug output
   std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
-  // std::cout << "Mode: " << controller_.state().name() << std::endl;
+  std::cout << "Mode: " << controller_.state().name() << std::endl;
   // std::cout << "Robot state: " << robot_state[0] << ", " << robot_state[1]  << std::endl;
   // std::cout << "Disk pose: " << controller_.get_disk_pose()[0] << ", "
   //           << controller_.get_disk_pose()[1] << std::endl << std::endl;g

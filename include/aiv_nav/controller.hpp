@@ -2,29 +2,9 @@
 
 #include <memory>
 #include <cstdint>
-#include <string_view>
 
+#include "aiv_nav/states.hpp"
 #include "aiv_nav/companion_disk.hpp"
-
-class Controller;
-
-/**
- * @brief Abstract base class for all controller states
- */
-class State
-{
-public:
-  virtual ~State() = default;
-  virtual void handle(Controller& context) = 0;
-  virtual std::string_view name() const = 0;
-
-  /**
-   * @brief Calculate the control signal
-   * @param context Controller context
-   * @return Control signal
-   */
-  virtual double calculate_control_signal(const Controller& context) = 0;
-};
 
 /**
  * @brief Main controller class
@@ -138,14 +118,19 @@ public:
   const std::vector<double>& get_disk_pose() const;
 
   /**
-   * @brief Update control parameters
+   * @brief Get dt
    */
-  void update_control_parameters();
+  double get_dt();
 
   /**
-   * @brief Get dR
+   * @brief Get dR_prev
    */
-  double get_dR() const;
+  double get_dR_prev() const;
+
+  /**
+   * @brief Set dR_prev
+   */
+  void set_dR_prev(double dR_prev);
 
   /**
    * @brief Get nu
@@ -153,9 +138,21 @@ public:
   double get_nu() const;
 
   /**
-   * @brief Get ddR
+   * @brief Get disk min length
    */
-  double get_dR_diff() const;
+  double get_disk_min_ray_length() const;
+
+  /**
+   * @brief Set verA pose
+   * @param verA New verA pose (x, y)
+   */
+  void set_verA(const std::vector<double>& verA);
+  
+  /**
+   * @brief Get verA pose
+   * @return VerA pose (x, y)
+   */
+  const std::vector<double>& get_verA() const;
 
 private:
   std::unique_ptr<State> state_;
@@ -182,13 +179,14 @@ private:
   CompanionDisk disk_;
 
   // Control parameters
+  double dt_{0.0};
   double t_prev_{0.0};
-  double dR_{0.0};
   double dR_prev_{0.0};
-  double ddR_{0.0};
   double u_{0.0};
   double v_{linear_velocity_};
   double nu_;
+  std::vector<double> verA_{0.0, 0.0};
+
   /**
    * @brief Set output control signal
    * @param u New output control signal
@@ -207,44 +205,4 @@ private:
    * @param lidar_data New lidar data
    */
    void set_lidar_data_(const std::vector<double>& lidar_data);
-};
-
-/**
- * @brief Controller Approaching Mode A implementation
- */
-class ModeA : public State
-{
-public:
-  void handle(Controller& context) override;
-  std::string_view name() const override;
-
-  double calculate_control_signal(const Controller& context) override;
-
-private:
-  bool goal_flag_{true};
-  double goal_angle_{0.0};
-};
-
-/**
- * @brief Controller Contact Mode C implementation
- */
-class ModeC : public State
-{
-public:
-  void handle(Controller& context) override;
-  std::string_view name() const override;
-
-  double calculate_control_signal(const Controller& context) override;
-};
-
-/**
- * @brief Controller Gap Mode G implementation
- */
-class ModeG : public State
-{
-public:
-  void handle(Controller& context) override;
-  std::string_view name() const override;
-
-  double calculate_control_signal(const Controller& context) override;
 };

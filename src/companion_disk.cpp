@@ -1,4 +1,5 @@
 #include "aiv_nav/companion_disk.hpp"
+#include "utils/utils.hpp"
 
 #include <cmath>
 #include <iterator>
@@ -27,13 +28,9 @@ void CompanionDisk::update_pose(const std::vector<double>& robot_state,
                                 const std::vector<double>& lidar_closest_point,
                                 double distance)
 {
-    double dx = robot_state[0] - lidar_closest_point[0]; 
-    double dy = robot_state[1] - lidar_closest_point[1];
-
-    double length = std::sqrt(dx * dx + dy * dy);
-
-    double ux = dx / length;
-    double uy = dy / length;
+    const double length = utils::norm2(lidar_closest_point, robot_state);
+    const double ux = (robot_state[0] - lidar_closest_point[0]) / length;
+    const double uy = (robot_state[1] - lidar_closest_point[1]) / length;
 
     pose_[0] = lidar_closest_point[0] + distance * ux;
     pose_[1] = lidar_closest_point[1] + distance * uy;
@@ -42,12 +39,15 @@ void CompanionDisk::update_pose(const std::vector<double>& robot_state,
 void CompanionDisk::update_rays_length(const std::vector<std::vector<double>>& lidar_points)
 {
   for (size_t i = 0; i < resolution_; ++i) {
-    const double dx = lidar_points[i][0] - pose_[0];
-    const double dy = lidar_points[i][1] - pose_[1];
-    rays_length_[i] = std::sqrt(dx*dx + dy*dy);
+    rays_length_[i] = utils::norm2(pose_, lidar_points[i]);
   }
 
   auto min_it = std::min_element(rays_length_.begin(), rays_length_.end());
   min_arg_ = std::distance(rays_length_.begin(), min_it);
   min_ray_length_ = *min_it;
+}
+
+double CompanionDisk::get_min_ray_length() const
+{
+  return min_ray_length_;
 }
