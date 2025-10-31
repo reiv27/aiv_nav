@@ -51,6 +51,7 @@ private:
   int resolution = 360;
   double lidar_angle_offset = M_PI;
   uint64_t window_size = 10;
+  double nu = 1.0;
   Controller controller_
   {
     std::make_unique<ModeA>(),
@@ -61,7 +62,8 @@ private:
     R_vis,
     resolution,
     lidar_angle_offset,
-    window_size
+    window_size,
+    nu
   };
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;

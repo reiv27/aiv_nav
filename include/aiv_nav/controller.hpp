@@ -36,6 +36,8 @@ public:
  * @param R_vis LiDAR visibility radius
  * @param resolution LiDAR resolution
  * @param lidar_angle_offset LiDAR angle offset
+ * @param window_size Window size
+ * @param nu Nu
  */
 class Controller final
 {
@@ -48,7 +50,8 @@ public:
              double R_vis,
              int resolution,
              double lidar_angle_offset,
-             uint64_t window_size=0);
+             uint64_t window_size=0,
+             double nu=1.0);
   
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -135,15 +138,24 @@ public:
   const std::vector<double>& get_disk_pose() const;
 
   /**
-   * @brief Increment internal counter
+   * @brief Update control parameters
    */
-  void increment_count();
+  void update_control_parameters();
 
   /**
-   * @brief Get current counter value
-   * @return Current counter value
+   * @brief Get dR
    */
-  int count() const;
+  double get_dR() const;
+
+  /**
+   * @brief Get nu
+   */
+  double get_nu() const;
+
+  /**
+   * @brief Get ddR
+   */
+  double get_dR_diff() const;
 
 private:
   std::unique_ptr<State> state_;
@@ -169,12 +181,14 @@ private:
   // Companion disk
   CompanionDisk disk_;
 
-  // Output control signal
+  // Control parameters
+  double t_prev_{0.0};
+  double dR_{0.0};
+  double dR_prev_{0.0};
+  double ddR_{0.0};
   double u_{0.0};
   double v_{linear_velocity_};
-
-  int count_{0};
-
+  double nu_;
   /**
    * @brief Set output control signal
    * @param u New output control signal

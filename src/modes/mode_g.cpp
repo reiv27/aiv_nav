@@ -8,11 +8,7 @@ std::string_view ModeG::name() const
 
 void ModeG::handle(Controller& ctrl)
 {
-  ctrl.increment_count();
 
-  if (ctrl.count() >= 6) {
-    ctrl.set_state(std::make_unique<ModeC>());
-  }
 }
 
 double ModeG::calculate_control_signal(const Controller& ctrl)

@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <limits>
+#include <chrono>
+#include <iostream>
 #include <algorithm>
 
 Controller::Controller(std::unique_ptr<State> init_state,
@@ -13,7 +15,8 @@ Controller::Controller(std::unique_ptr<State> init_state,
                        double R_vis,
                        int resolution,
                        double lidar_angle_offset,
-                       uint64_t window_size)
+                       uint64_t window_size,
+                       double nu)
     : state_(std::move(init_state))
     , linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
@@ -23,6 +26,7 @@ Controller::Controller(std::unique_ptr<State> init_state,
     , resolution_(resolution)
     , lidar_angle_offset_(lidar_angle_offset)
     , disk_{ R_min_, resolution_, window_size }
+    , nu_(nu)
 {
 }
 
@@ -37,11 +41,14 @@ void Controller::update(const std::vector<double>& robot_state,
   }
 
   // Debug v_
-  if (state_->name() == "ModeC") {
-    v_ = 0.0;
-  }
+  // if (state_->name() == "ModeC" or state_->name() == "ModeG") {
+  //   v_ = 0.0;
+  // }
+
+  update_control_parameters();
   u_ = state_->calculate_control_signal(*this);
 }
+
 
 void Controller::set_state(std::unique_ptr<State> s)
 {
@@ -51,16 +58,6 @@ void Controller::set_state(std::unique_ptr<State> s)
 const State& Controller::state() const
 {
   return *state_;
-}
-
-void Controller::increment_count()
-{
-  ++count_;
-}
-
-int Controller::count() const
-{
-  return count_;  
 }
 
 double Controller::get_control_signal() const
@@ -96,9 +93,10 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
     const std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
     lidar_points_.push_back(lidar_point);
     lidar_closest_point_ = lidar_points_[min_idx]; 
-
-    disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
   }
+
+  disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
+  disk_.update_rays_length(lidar_points_);
 }
 
 const std::vector<double>& Controller::get_robot_state() const
@@ -149,4 +147,32 @@ double Controller::get_rho_0() const
 const std::vector<double>& Controller::get_disk_pose() const
 {
   return disk_.get_pose();
+}
+
+void Controller::update_control_parameters()
+{
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  double t_current = std::chrono::duration<double>(duration).count();
+  std::cout << "dt: " << t_current - t_prev_ << std::endl;
+
+  dR_ = min_dist_ - rho_0_;
+  ddR_ = (dR_ - dR_prev_) / (t_current - t_prev_);
+  t_prev_ = t_current;
+  dR_prev_ = dR_;
+}
+
+double Controller::get_dR() const
+{
+  return dR_;
+}
+
+double Controller::get_nu() const
+{
+  return nu_;
+}
+
+double Controller::get_dR_diff() const
+{
+  return ddR_;
 }
