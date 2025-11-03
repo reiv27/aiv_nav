@@ -143,6 +143,12 @@ public:
   double get_disk_min_ray_length() const;
 
   /**
+   * @brief Get disk min arg
+   * @return Disk min arg
+   */
+  uint64_t get_disk_min_arg() const;
+
+  /**
    * @brief Set verA pose
    * @param verA New verA pose (x, y)
    */

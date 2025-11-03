@@ -32,14 +32,22 @@ public:
   /**
    * @brief Update rays length
    * @param lidar_points Lidar points
+   * @param lidar_data Lidar data
    */
-  void update_rays_length(const std::vector<std::vector<double>>& lidar_points);
+  void update_rays_length(const std::vector<std::vector<double>>& lidar_points,
+                          const std::vector<double>& lidar_data);
 
   /**
    * @brief Get disk min length
    * @return Disk min length
    */
   double get_min_ray_length() const;
+  
+  /**
+   * @brief Get disk min arg
+   * @return Disk min arg
+   */
+  uint64_t get_min_arg() const;
   
 private:
   double R_;
@@ -49,5 +57,5 @@ private:
   std::vector<double> pose_{0.0, 0.0};
   std::vector<double> rays_length_;
   double min_ray_length_{0.0};
-  int min_arg_{0};
+  uint64_t min_arg_{0};
 };

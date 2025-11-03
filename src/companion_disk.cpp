@@ -1,9 +1,10 @@
 #include "aiv_nav/companion_disk.hpp"
-#include "utils/utils.hpp"
 
 #include <cmath>
 #include <iterator>
 #include <algorithm>
+
+#include "utils/utils.hpp"
 
 CompanionDisk::CompanionDisk(double R, uint64_t resolution, uint64_t window_size)
     : R_(R)
@@ -36,18 +37,42 @@ void CompanionDisk::update_pose(const std::vector<double>& robot_state,
     pose_[1] = lidar_closest_point[1] + distance * uy;
 }
 
-void CompanionDisk::update_rays_length(const std::vector<std::vector<double>>& lidar_points)
+void CompanionDisk::update_rays_length(const std::vector<std::vector<double>>& lidar_points,
+                                       const std::vector<double>& lidar_data)
 {
+  const int n = resolution_;
+
+  auto it_min = std::min_element(lidar_data.begin(), lidar_data.end());
+  const int target = static_cast<int>(std::distance(lidar_data.begin(), it_min));
+
   for (size_t i = 0; i < resolution_; ++i) {
     rays_length_[i] = utils::norm2(pose_, lidar_points[i]);
   }
+  
+  auto mod = [n](int x){ int r = x % n; return r < 0 ? r + n : r; };
+  const int start = mod(target - window_size_);
+  const int end   = mod(target + window_size_);
 
-  auto min_it = std::min_element(rays_length_.begin(), rays_length_.end());
-  min_arg_ = std::distance(rays_length_.begin(), min_it);
-  min_ray_length_ = *min_it;
+  const double INF = std::numeric_limits<double>::infinity();
+
+  if (start <= end) {
+      for (int i = start; i < end; ++i) rays_length_[i] = INF;
+  } else {
+      for (int i = start; i < n; ++i) rays_length_[i] = INF;
+      for (int i = 0; i < end;   ++i) rays_length_[i] = INF;
+  }
+
+  auto it = std::min_element(rays_length_.begin(), rays_length_.end());
+  min_ray_length_ = *it;
+  min_arg_ = static_cast<uint64_t>(std::distance(rays_length_.begin(), it));
 }
 
 double CompanionDisk::get_min_ray_length() const
 {
   return min_ray_length_;
+}
+
+uint64_t CompanionDisk::get_min_arg() const
+{
+  return min_arg_;
 }

@@ -1,6 +1,5 @@
 #include <memory>
 #include <vector>
-
 #include <fstream>
 #include <iomanip>
 
@@ -19,8 +18,6 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
-
 
 // Controller
 #include "aiv_nav/controller.hpp"
@@ -51,7 +48,7 @@ private:
   int resolution = 360;
   double lidar_angle_offset = M_PI;
   uint64_t window_size = 10;
-  double nu = 1.0;
+  double nu = 1.25;
   Controller controller_
   {
     std::make_unique<ModeA>(),
@@ -154,16 +151,19 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
               << controller_.get_closest_lidar_point()[0] << ","
               << controller_.get_closest_lidar_point()[1] << ","
               << controller_.get_disk_pose()[0] << ","
-              << controller_.get_disk_pose()[1] << "\n";
+              << controller_.get_disk_pose()[1] << ","
+              << controller_.get_verA()[0] << ","
+              << controller_.get_verA()[1] << ","
+              << controller_.get_closest_lidar_point()[0] << ","
+              << controller_.get_closest_lidar_point()[1] << ","
+              << controller_.get_lidar_points()[controller_.get_disk_min_arg()][0] << ","
+              << controller_.get_lidar_points()[controller_.get_disk_min_arg()][1] << "\n";
     log_file_.flush();
   }
   
   // Debug output
-  std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
+  // std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
   std::cout << "Mode: " << controller_.state().name() << std::endl;
-  // std::cout << "Robot state: " << robot_state[0] << ", " << robot_state[1]  << std::endl;
-  // std::cout << "Disk pose: " << controller_.get_disk_pose()[0] << ", "
-  //           << controller_.get_disk_pose()[1] << std::endl << std::endl;g
 
   // Publish control signal
   cmd_vel_msg_.linear.x = controller_.get_v_();

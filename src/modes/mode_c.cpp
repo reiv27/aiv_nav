@@ -1,9 +1,10 @@
-#include "utils/utils.hpp"
 #include "aiv_nav/states.hpp"
-#include "aiv_nav/controller.hpp"
 
 #include <chrono>
 #include <iostream>
+
+#include "utils/utils.hpp"
+#include "aiv_nav/controller.hpp"
 
 std::string_view ModeC::name() const
 {
@@ -11,7 +12,7 @@ std::string_view ModeC::name() const
 }
 
 void ModeC::handle(Controller& ctrl)
-{
+{  
   if (ctrl.get_disk_min_ray_length() < utils::norm2(ctrl.get_disk_pose(),
                                                     ctrl.get_closest_lidar_point())) {
     ctrl.set_verA(ctrl.get_disk_pose());

@@ -1,12 +1,13 @@
-#include "aiv_nav/states.hpp"
 #include "aiv_nav/controller.hpp"
-#include "aiv_nav/companion_disk.hpp"
 
 #include <cmath>
 #include <limits>
 #include <chrono>
 #include <iostream>
 #include <algorithm>
+
+#include "aiv_nav/states.hpp"
+#include "aiv_nav/companion_disk.hpp"
 
 Controller::Controller(std::unique_ptr<State> init_state,
                        double linear_velocity,
@@ -47,9 +48,9 @@ void Controller::update(const std::vector<double>& robot_state,
   dt_ = t_current - t_prev_;
   t_prev_ = t_current;
 
-  if (state_->name() == "ModeG") {
-    v_ = 0.0;
-  }
+  // if (state_->name() == "ModeG") {
+  //   v_ = 0.0;
+  // }
 
   u_ = state_->calculate_control_signal(*this);
 }
@@ -100,7 +101,7 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
   }
 
   disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
-  disk_.update_rays_length(lidar_points_);
+  disk_.update_rays_length(lidar_points_, lidar_data);
 }
 
 const std::vector<double>& Controller::get_robot_state() const
@@ -176,6 +177,11 @@ double Controller::get_nu() const
 double Controller::get_disk_min_ray_length() const
 {
   return disk_.get_min_ray_length();
+}
+
+uint64_t Controller::get_disk_min_arg() const
+{
+  return disk_.get_min_arg();
 }
 
 void Controller::set_verA(const std::vector<double>& verA)

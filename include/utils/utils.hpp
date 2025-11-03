@@ -41,43 +41,44 @@ inline double norm2(const std::vector<double>& vec1, const std::vector<double>& 
   return std::sqrt(std::pow(vec2[0] - vec1[0], 2) + std::pow(vec2[1] - vec1[1], 2));
 }
 
-inline bool is_point_in_angle(const std::vector<double>& vec,
-                              const std::vector<double>& point1,
-                              const std::vector<double>& point2,
+inline std::vector<double> normilize_vector(const std::vector<double>& v)
+{
+  std::vector<double> new_vec{v[0] / std::sqrt(v[0] * v[0] + v[1] * v[1]),
+                              v[1] / std::sqrt(v[0] * v[0] + v[1] * v[1])};
+  return new_vec;
+}
+
+inline double dot_product(const std::vector<double>& v1, const std::vector<double>& v2)
+{
+  return v1[0] * v2[0] + v1[1] * v2[1];
+}
+
+inline double angle_between_vectors(const std::vector<double>& v1, 
+                                    const std::vector<double>& v2)
+{
+  const double cross = v1[0] * v2[1] - v1[1] * v2[0];
+  const double dot = dot_product(v1, v2);
+  return std::abs(std::atan2(cross, dot));
+}
+
+inline bool is_point_in_angle(const std::vector<double>& v,
+                              const std::vector<double>& p1,
+                              const std::vector<double>& p2,
                               const std::vector<double>& r)
 {
-  // const std::vector<double> vp1{point1[0] - vec[0], point1[1] - vec[1]};
-  // const std::vector<double> vp2{point2[0] - vec[0], point2[1] - vec[1]};
-  // const std::vector<double> vr{r[0] - vec[0], r[1] - vec[1]};
-  // const std::vector<double> vr = r - vec;
+  const std::vector<double> vp1{p1[0] - v[0], p1[1] - v[1]};
+  const std::vector<double> vp2{p2[0] - v[0], p2[1] - v[1]};
+  const std::vector<double> vr{r[0] - v[0], r[1] - v[1]};
 
-  // const double vp1_norm = norm2(vec1);
-  // const double vp2_norm = norm2(vec2);
-  // const double vr_norm = norm2(vr);
+  const std::vector<double> vp1_norm = normilize_vector(vp1);
+  const std::vector<double> vp2_norm = normilize_vector(vp2);
+  const std::vector<double> vr_norm = normilize_vector(vr);
 
-  // const double angle_p1_p2 = std::acos(std::clamp(std::dot(vp1_norm, vp2_norm), -1.0, 1.0));
+  const double angle_p1_p2 = angle_between_vectors(vp1_norm, vp2_norm);
+  const double angle_vr_p1 = angle_between_vectors(vr_norm, vp1_norm);
+  const double angle_vr_p2 = angle_between_vectors(vr_norm, vp2_norm);
+
+  return (angle_vr_p1 <= angle_p1_p2) && (angle_vr_p2 <= angle_p1_p2);
 }
-// def is_point_in_angle(V, P1, P2, r_pose):
-//     # Calculate vectors
-//     VP1 = P1 - V
-//     VP2 = P2 - V
-//     VR = r_pose - V
-
-//     # Normalize vectors
-//     VP1_norm = VP1 / np.linalg.norm(VP1)
-//     VP2_norm = VP2 / np.linalg.norm(VP2)
-//     VR_norm = VR / np.linalg.norm(VR)
-
-//     # Calculate the angle between P1 and P2 using the dot product
-//     angle_P1_P2 = np.arccos(np.clip(np.dot(VP1_norm, VP2_norm), -1.0, 1.0))  # Angle between P1 and P2
-
-//     # Calculate the angle between VR and VP1
-//     angle_VR_P1 = np.arccos(np.clip(np.dot(VR_norm, VP1_norm), -1.0, 1.0))
-
-//     # Calculate the angle between VR and VP2
-//     angle_VR_P2 = np.arccos(np.clip(np.dot(VR_norm, VP2_norm), -1.0, 1.0))
-
-//     # Check if the angle between VR and both P1 and P2 is less than the angle between P1 and P2
-//     return angle_VR_P1 <= angle_P1_P2 and angle_VR_P2 <= angle_P1_P2
 
 } // namespace utils
