@@ -8,7 +8,6 @@
 
 /**
  * @brief Main controller class
- * @param init_state Initial state of the controller
  * @param linear_velocity Linear velocity
  * @param angular_velocity Angular velocity
  * @param rho_0 rho_0
@@ -22,8 +21,8 @@
 class Controller final
 {
 public:
-  Controller(std::unique_ptr<State> init_state,
-             double linear_velocity,
+  Controller();
+  Controller(double linear_velocity,
              double angular_velocity,
              double rho_0,
              double R_epsilon,
@@ -61,21 +60,9 @@ public:
   double get_control_signal() const;
 
   /**
-   * @brief Get output linear velocity
-   */
-  double get_v_() const {
-    return v_;
-  }
-
-  /**
    * @brief Get robot state
    */
   const std::vector<double>& get_robot_state() const;
-
-  /**
-   * @brief Get lidar data
-   */
-  const std::vector<double>& get_lidar_data() const;
 
   /**
    * @brief Get min distance from lidar data
@@ -161,14 +148,14 @@ public:
   const std::vector<double>& get_verA() const;
 
 private:
-  std::unique_ptr<State> state_;
+  std::unique_ptr<State> state_{std::make_unique<ModeA>()};
 
   // Controller parameters
-  const double linear_velocity_;
-  const double angular_velocity_;
+  double linear_velocity_;
+  double angular_velocity_;
   double R_min_;
-  const double rho_0_;
-  const double R_vis_;
+  double rho_0_;
+  double R_vis_;
 
   // Robot states
   std::vector<double> robot_state_{};
@@ -189,7 +176,6 @@ private:
   double t_prev_{0.0};
   double dR_prev_{0.0};
   double u_{0.0};
-  double v_{linear_velocity_};
   double nu_;
   std::vector<double> verA_{0.0, 0.0};
 

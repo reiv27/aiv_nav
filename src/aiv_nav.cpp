@@ -39,29 +39,9 @@ private:
   void syncCallback(
     const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
     const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
- 
-  double linear_velocity = 0.5;
-  double angular_velocity = 2.0;
-  double rho_0 = 1.0;
-  double R_epsilon = 0.1;
-  double R_vis = 8.0;
-  int resolution = 360;
-  double lidar_angle_offset = M_PI;
-  uint64_t window_size = 10;
-  double nu = 1.25;
-  Controller controller_
-  {
-    std::make_unique<ModeA>(),
-    linear_velocity,
-    angular_velocity,
-    rho_0,
-    R_epsilon,
-    R_vis,
-    resolution,
-    lidar_angle_offset,
-    window_size,
-    nu
-  };
+
+  Controller controller_;
+
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
@@ -73,7 +53,7 @@ private:
 
 public:
   AIVController() : Node("aiv_nav")
-  {
+  {  
     // Configure subscribers through message_filters::Subscriber
     odom_sub_ = std::make_shared<message_filters::Subscriber<nav_msgs::msg::Odometry>>(
       this, "/odom", rmw_qos_profile_sensor_data);
@@ -107,15 +87,42 @@ public:
       std::ios::out | std::ios::trunc
     );
     if (log_file_.is_open()) {
-      // Write CSV header
-      // log_file_ << "state,x,y,theta,R_min,rho_0,min_dist,"
-      //           << "closest_lidar_x,closest_lidar_y,disk_x,disk_y\n";
-      // log_file_.flush();
-      std::cout << "Logging to: debug/controller_telemetry.csv" << std::endl;
-      // RCLCPP_INFO_ONCE(this->get_logger(), "Logging to: debug/controller_telemetry.csv");
+      RCLCPP_INFO_ONCE(this->get_logger(), "Logging to: debug/controller_telemetry.csv");
     } else {
       std::cout << "Failed to open log file!" << std::endl;
     }
+
+    this->declare_parameter<double>("linear_velocity");
+    this->declare_parameter<double>("angular_velocity");
+    this->declare_parameter<double>("rho_0");
+    this->declare_parameter<double>("R_epsilon");
+    this->declare_parameter<double>("R_vis");
+    this->declare_parameter<int>("resolution");
+    this->declare_parameter<double>("lidar_angle_offset");
+    this->declare_parameter<int>("window_size");
+    this->declare_parameter<double>("nu");
+
+    double linear_velocity = this->get_parameter("linear_velocity").as_double();
+    double angular_velocity = this->get_parameter("angular_velocity").as_double();
+    double rho_0 = this->get_parameter("rho_0").as_double();
+    double R_epsilon = this->get_parameter("R_epsilon").as_double();
+    double R_vis = this->get_parameter("R_vis").as_double();
+    int resolution = this->get_parameter("resolution").as_int();
+    double lidar_angle_offset = this->get_parameter("lidar_angle_offset").as_double();
+    int window_size = this->get_parameter("window_size").as_int();
+    double nu = this->get_parameter("nu").as_double();
+  
+    controller_ = Controller(
+      linear_velocity,
+      angular_velocity,
+      rho_0,
+      R_epsilon,
+      R_vis,
+      resolution,
+      lidar_angle_offset,
+      window_size,
+      nu
+    );
   }
 };
 
@@ -141,7 +148,6 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   // state,x,y,theta,R_min,rho_0,min_dist,closest_lidar_x,closest_lidar_y,disk_x,disk_y
   if (log_file_.is_open()) {
     log_file_ 
-              // << controller_.state().name() << ","
               << robot_state[0] << ","
               << robot_state[1] << ","
               << robot_state[2] << ","
@@ -162,11 +168,10 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   }
   
   // Debug output
-  // std::cout << "Control signal: " << controller_.get_control_signal() << std::endl;
-  std::cout << "Mode: " << controller_.state().name() << std::endl;
+  RCLCPP_INFO(this->get_logger(), "Mode: %s", controller_.state().name().data());
 
   // Publish control signal
-  cmd_vel_msg_.linear.x = controller_.get_v_();
+  cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
   cmd_vel_msg_.angular.z = controller_.get_control_signal();
   cmd_vel_pub_->publish(cmd_vel_msg_);
 }

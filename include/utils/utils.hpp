@@ -41,7 +41,7 @@ inline double norm2(const std::vector<double>& vec1, const std::vector<double>& 
   return std::sqrt(std::pow(vec2[0] - vec1[0], 2) + std::pow(vec2[1] - vec1[1], 2));
 }
 
-inline std::vector<double> normilize_vector(const std::vector<double>& v)
+inline std::vector<double> normalize_vector(const std::vector<double>& v)
 {
   std::vector<double> new_vec{v[0] / std::sqrt(v[0] * v[0] + v[1] * v[1]),
                               v[1] / std::sqrt(v[0] * v[0] + v[1] * v[1])};
@@ -70,9 +70,9 @@ inline bool is_point_in_angle(const std::vector<double>& v,
   const std::vector<double> vp2{p2[0] - v[0], p2[1] - v[1]};
   const std::vector<double> vr{r[0] - v[0], r[1] - v[1]};
 
-  const std::vector<double> vp1_norm = normilize_vector(vp1);
-  const std::vector<double> vp2_norm = normilize_vector(vp2);
-  const std::vector<double> vr_norm = normilize_vector(vr);
+  const std::vector<double> vp1_norm = normalize_vector(vp1);
+  const std::vector<double> vp2_norm = normalize_vector(vp2);
+  const std::vector<double> vr_norm = normalize_vector(vr);
 
   const double angle_p1_p2 = angle_between_vectors(vp1_norm, vp2_norm);
   const double angle_vr_p1 = angle_between_vectors(vr_norm, vp1_norm);

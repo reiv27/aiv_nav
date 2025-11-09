@@ -9,8 +9,20 @@
 #include "aiv_nav/states.hpp"
 #include "aiv_nav/companion_disk.hpp"
 
-Controller::Controller(std::unique_ptr<State> init_state,
-                       double linear_velocity,
+Controller::Controller()
+    : linear_velocity_(0.0)
+    , angular_velocity_(0.0)
+    , R_min_(0.0)
+    , rho_0_(0.0)
+    , R_vis_(0.0)
+    , resolution_(0)
+    , lidar_angle_offset_(0.0)
+    , disk_()
+    , nu_(0.0)
+{
+}
+
+Controller::Controller(double linear_velocity,
                        double angular_velocity,
                        double rho_0,
                        double R_epsilon,
@@ -19,8 +31,7 @@ Controller::Controller(std::unique_ptr<State> init_state,
                        double lidar_angle_offset,
                        uint64_t window_size,
                        double nu)
-    : state_(std::move(init_state))
-    , linear_velocity_(linear_velocity)
+    : linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , R_min_{ linear_velocity / angular_velocity + R_epsilon }
     , rho_0_(rho_0)
@@ -47,10 +58,6 @@ void Controller::update(const std::vector<double>& robot_state,
   const double t_current = std::chrono::duration<double>(duration).count();
   dt_ = t_current - t_prev_;
   t_prev_ = t_current;
-
-  // if (state_->name() == "ModeG") {
-  //   v_ = 0.0;
-  // }
 
   u_ = state_->calculate_control_signal(*this);
 }
@@ -107,11 +114,6 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
 const std::vector<double>& Controller::get_robot_state() const
 {
   return robot_state_;
-}
-
-const std::vector<double>& Controller::get_lidar_data() const
-{
-  return lidar_data_;
 }
 
 double Controller::get_min_dist() const

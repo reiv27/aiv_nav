@@ -29,13 +29,5 @@ double ModeG::calculate_control_signal(Controller& ctrl)
   const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sign = utils::sign(ddR + second_part);
-
-  std::cout << "dR: " << dR << std::endl;
-  std::cout << "ddR: " << ddR << std::endl;
-  std::cout << "saturated_dR: " << saturated_dR << std::endl;
-  std::cout << "second_part: " << second_part << std::endl;
-  std::cout << "sign: " << sign << std::endl;
-  std::cout << "u: " << ctrl.get_angular_velocity() * sign << std::endl;
   return ctrl.get_angular_velocity() * sign;
-  // return 0.0;
 }

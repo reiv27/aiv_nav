@@ -6,6 +6,16 @@
 
 #include "utils/utils.hpp"
 
+CompanionDisk::CompanionDisk()
+    : R_(0.0)
+    , resolution_(0)
+    , window_size_(0)
+    , rays_length_(0, 0.0)
+    , min_ray_length_(0.0)
+{
+}
+
+
 CompanionDisk::CompanionDisk(double R, uint64_t resolution, uint64_t window_size)
     : R_(R)
     , resolution_(resolution)
