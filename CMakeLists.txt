@@ -47,10 +47,9 @@ ament_target_dependencies(aiv_nav
 # Install
 install(TARGETS aiv_nav aiv_nav_controller
   EXPORT aiv_nav_controllerTargets
-  DESTINATION lib/${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
   INCLUDES DESTINATION include)
 
 install(DIRECTORY include/

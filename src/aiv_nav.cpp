@@ -83,13 +83,13 @@ public:
 
     // Open log file
     log_file_.open(
-      "/home/user/projects/ros2_ws/src/aiv_nav_controller/debug/controller_telemetry.csv",
+      "/home/user/projects/ros2_ws/src/aiv_nav/debug/controller_telemetry.csv",
       std::ios::out | std::ios::trunc
     );
     if (log_file_.is_open()) {
       RCLCPP_INFO_ONCE(this->get_logger(), "Logging to: debug/controller_telemetry.csv");
     } else {
-      std::cout << "Failed to open log file!" << std::endl;
+      RCLCPP_ERROR(this->get_logger(), "Failed to open log file!");
     }
 
     this->declare_parameter<double>("linear_velocity");
