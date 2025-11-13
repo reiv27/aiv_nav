@@ -147,6 +147,26 @@ public:
    */
   const std::vector<double>& get_verA() const;
 
+  /**
+   * @brief Set gap points
+   * @param gap_point_1 New gap point 1 (x, y)
+   * @param gap_point_2 New gap point 2 (x, y)
+   */
+  void set_gap_points(const std::vector<double>& gap_point_1,
+                      const std::vector<double>& gap_point_2);
+
+  /**
+   * @brief Get gap point 1
+   * @return Gap point 1 (x, y)
+   */
+  const std::vector<double>& get_gap_point_1() const;
+
+  /**
+   * @brief Get gap point 2
+   * @return Gap point 2 (x, y)
+   */
+  const std::vector<double>& get_gap_point_2() const;
+
 private:
   std::unique_ptr<State> state_{std::make_unique<ModeA>()};
 
@@ -178,6 +198,8 @@ private:
   double u_{0.0};
   double nu_;
   std::vector<double> verA_{0.0, 0.0};
+  std::vector<double> gap_point_1_{0.0, 0.0};
+  std::vector<double> gap_point_2_{0.0, 0.0};
 
   /**
    * @brief Set output control signal

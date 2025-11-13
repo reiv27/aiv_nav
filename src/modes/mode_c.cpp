@@ -11,11 +11,18 @@ std::string_view ModeC::name() const
   return "ModeC";
 }
 
+StateName ModeC::state_name() const
+{
+  return StateName::ModeC;
+}
+
 void ModeC::handle(Controller& ctrl)
-{  
-  if (ctrl.get_disk_min_ray_length() < utils::norm2(ctrl.get_disk_pose(),
-                                                    ctrl.get_closest_lidar_point())) {
+{ 
+  if (ctrl.get_disk_min_ray_length() <= utils::norm2(ctrl.get_disk_pose(),
+                                                     ctrl.get_closest_lidar_point())) {
     ctrl.set_verA(ctrl.get_disk_pose());
+    ctrl.set_gap_points(ctrl.get_closest_lidar_point(),
+                        ctrl.get_lidar_points()[ctrl.get_disk_min_arg()]);
     ctrl.set_state(std::make_unique<ModeG>());
   }
 }

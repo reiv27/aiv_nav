@@ -68,7 +68,7 @@ public:
         sensor_msgs::msg::LaserScan>;
 
     sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(
-      SyncPolicy(20), *odom_sub_, *scan_sub_
+      SyncPolicy(10), *odom_sub_, *scan_sub_
     );
 
     // Allowed "window" of desynchronization by stamp (slop)
@@ -163,7 +163,10 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
               << controller_.get_closest_lidar_point()[0] << ","
               << controller_.get_closest_lidar_point()[1] << ","
               << controller_.get_lidar_points()[controller_.get_disk_min_arg()][0] << ","
-              << controller_.get_lidar_points()[controller_.get_disk_min_arg()][1] << "\n";
+              << controller_.get_lidar_points()[controller_.get_disk_min_arg()][1] << ","
+              << controller_.get_dR_prev() << ","
+              << static_cast<int>(controller_.state().state_name()) << ","
+              << controller_.get_control_signal() << "\n";
     log_file_.flush();
   }
   

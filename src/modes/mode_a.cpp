@@ -12,6 +12,11 @@ std::string_view ModeA::name() const
   return "ModeA";
 }
 
+StateName ModeA::state_name() const
+{
+  return StateName::ModeA;
+}
+
 void ModeA::handle(Controller& ctrl)
 {
   if (ctrl.get_min_dist() < (ctrl.get_rho_0() + ctrl.get_R_min())) {

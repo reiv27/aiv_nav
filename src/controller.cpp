@@ -195,3 +195,20 @@ const std::vector<double>& Controller::get_verA() const
 {
   return verA_;
 }
+
+void Controller::set_gap_points(const std::vector<double>& gap_point_1,
+                                const std::vector<double>& gap_point_2)
+{
+  gap_point_1_ = gap_point_1;
+  gap_point_2_ = gap_point_2;
+}
+
+const std::vector<double>& Controller::get_gap_point_1() const
+{
+  return gap_point_1_;
+}
+
+const std::vector<double>& Controller::get_gap_point_2() const
+{
+  return gap_point_2_;
+}

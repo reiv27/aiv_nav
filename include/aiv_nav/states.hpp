@@ -5,6 +5,15 @@
 class Controller;
 
 /**
+ * @brief Enum class for state names
+ */
+ enum class StateName {
+  ModeA,
+  ModeC,
+  ModeG
+};
+
+/**
  * @brief Abstract base class for all controller states
  */
 class State
@@ -13,6 +22,7 @@ public:
   virtual ~State() = default;
   virtual void handle(Controller& context) = 0;
   virtual std::string_view name() const = 0;
+  virtual StateName state_name() const = 0;
 
   /**
    * @brief Calculate the control signal
@@ -30,6 +40,7 @@ public:
  public:
    void handle(Controller& context) override;
    std::string_view name() const override;
+   StateName state_name() const override;
  
    double calculate_control_signal(Controller& context) override;
  
@@ -46,6 +57,7 @@ public:
  public:
    void handle(Controller& context) override;
    std::string_view name() const override;
+   StateName state_name() const override;
  
    double calculate_control_signal(Controller& context) override;
  };
@@ -58,6 +70,7 @@ public:
  public:
    void handle(Controller& context) override;
    std::string_view name() const override;
- 
+   StateName state_name() const override;
+
    double calculate_control_signal(Controller& context) override;
  };

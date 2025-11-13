@@ -10,11 +10,16 @@ std::string_view ModeG::name() const
   return "ModeG";
 }
 
+StateName ModeG::state_name() const
+{
+  return StateName::ModeG;
+}
+
 void ModeG::handle(Controller& ctrl)
 {
   bool is_robot_in_verA = utils::is_point_in_angle(ctrl.get_verA(),
-                                                   ctrl.get_closest_lidar_point(),
-                                                   ctrl.get_lidar_points()[ctrl.get_disk_min_arg()],
+                                                   ctrl.get_gap_point_1(),
+                                                   ctrl.get_gap_point_2(),
                                                    ctrl.get_robot_state());
   if (!is_robot_in_verA) {
     ctrl.set_state(std::make_unique<ModeC>());
