@@ -37,4 +37,5 @@ double ModeA::calculate_control_signal(Controller& ctrl)
   const double delta_angle = std::atan2(std::sin(goal_angle_ - ctrl.get_robot_state()[2]),
                                   std::cos(goal_angle_ - ctrl.get_robot_state()[2]));;
   return ctrl.get_angular_velocity() * utils::sign(delta_angle);
+  // return ctrl.get_angular_velocity() * utils::soft_sign(delta_angle);
 }

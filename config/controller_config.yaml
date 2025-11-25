@@ -1,11 +1,12 @@
 aiv_nav:
   ros__parameters:
     linear_velocity: 1.0
-    angular_velocity: 0.769230769
+    angular_velocity: 0.666666667
     rho_0: 2.0
-    R_epsilon: 0.2
+    R_epsilon: 0.0
     R_vis: 12.0
     resolution: 360
     lidar_angle_offset: 3.14159
-    window_size: 10
+    window_size: 20
     nu: 100.0
+    history_size: 10

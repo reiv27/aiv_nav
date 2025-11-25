@@ -19,6 +19,8 @@ Controller::Controller()
     , lidar_angle_offset_(0.0)
     , disk_()
     , nu_(0.0)
+    , history_size_(0)
+    , u_history_(0, 0.0)
 {
 }
 
@@ -30,7 +32,8 @@ Controller::Controller(double linear_velocity,
                        int resolution,
                        double lidar_angle_offset,
                        uint64_t window_size,
-                       double nu)
+                       double nu,
+                       int history_size)
     : linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , R_min_{ linear_velocity / angular_velocity + R_epsilon }
@@ -40,6 +43,8 @@ Controller::Controller(double linear_velocity,
     , lidar_angle_offset_(lidar_angle_offset)
     , disk_{ R_min_, resolution_, window_size }
     , nu_(nu)
+    , history_size_(history_size)
+    , u_history_(history_size, 0.0)
 {
 }
 
@@ -53,13 +58,16 @@ void Controller::update(const std::vector<double>& robot_state,
     state_->handle(*this);
   }
 
-  auto now = std::chrono::system_clock::now();
+  auto now = std::chrono::steady_clock::now();
   auto duration = now.time_since_epoch();
   const double t_current = std::chrono::duration<double>(duration).count();
   dt_ = t_current - t_prev_;
   t_prev_ = t_current;
 
   u_ = state_->calculate_control_signal(*this);
+  u_ = moving_average_(u_);
+  // std::cout << dt_ << std::endl;
+  // std::cout << "State: " << state_->name() << " Control signal: " << u_ << std::endl;
 }
 
 void Controller::set_state(std::unique_ptr<State> s)
@@ -211,4 +219,21 @@ const std::vector<double>& Controller::get_gap_point_1() const
 const std::vector<double>& Controller::get_gap_point_2() const
 {
   return gap_point_2_;
+}
+
+double Controller::moving_average_(double u)
+{
+  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
+  u_history_.pop_front();
+  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
+  u_history_.push_back(u);
+  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
+  // for (int i = 0; i < history_size_; ++i) {
+  //   std::cout << "u_history_[i]: " << u_history_[i] << std::endl;
+  // }
+  double sum = 0.0;
+  for (int i = 0; i < history_size_; ++i) {
+    sum += u_history_[i];
+  }
+  return sum / history_size_;
 }

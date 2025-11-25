@@ -1,7 +1,5 @@
-#include <memory>
 #include <vector>
 #include <fstream>
-#include <iomanip>
 
 #include "rclcpp/rclcpp.hpp"
 // Messages
@@ -21,8 +19,6 @@
 
 // Controller
 #include "aiv_nav/controller.hpp"
-
-using std::placeholders::_1;
 
 class AIVController : public rclcpp::Node
 {
@@ -48,8 +44,6 @@ private:
 
   // CSV logging
   std::ofstream log_file_;
-  int log_iteration_ = 0;
-  bool log_header_written_ = false;
 
 public:
   AIVController() : Node("aiv_nav")
@@ -72,7 +66,9 @@ public:
     );
 
     // Allowed "window" of desynchronization by stamp (slop)
-    sync_->setMaxIntervalDuration(rclcpp::Duration::from_seconds(0.15));
+    sync_->setMaxIntervalDuration(
+      rclcpp::Duration::from_seconds(0.15)
+    );
 
     // Callback on synchronized pair of messages
     sync_->registerCallback(
@@ -101,6 +97,7 @@ public:
     this->declare_parameter<double>("lidar_angle_offset");
     this->declare_parameter<int>("window_size");
     this->declare_parameter<double>("nu");
+    this->declare_parameter<int>("history_size");
 
     double linear_velocity = this->get_parameter("linear_velocity").as_double();
     double angular_velocity = this->get_parameter("angular_velocity").as_double();
@@ -111,6 +108,19 @@ public:
     double lidar_angle_offset = this->get_parameter("lidar_angle_offset").as_double();
     int window_size = this->get_parameter("window_size").as_int();
     double nu = this->get_parameter("nu").as_double();
+    int history_size = this->get_parameter("history_size").as_int();
+
+    RCLCPP_INFO(this->get_logger(), "linear_velocity: %f", linear_velocity);
+    RCLCPP_INFO(this->get_logger(), "angular_velocity: %f", angular_velocity);
+    RCLCPP_INFO(this->get_logger(), "rho_0: %f", rho_0);
+    RCLCPP_INFO(this->get_logger(), "R_epsilon: %f", R_epsilon);
+    RCLCPP_INFO(this->get_logger(), "R_vis: %f", R_vis);
+    // RCLCPP_INFO(this->get_logger(), "resolution: %d", resolution);
+    // RCLCPP_INFO(this->get_logger(), "lidar_angle_offset: %f", lidar_angle_offset);
+    // RCLCPP_INFO(this->get_logger(), "window_size: %d", window_size);
+    // RCLCPP_INFO(this->get_logger(), "nu: %f", nu);
+    RCLCPP_INFO(this->get_logger(), "R_min: %f", linear_velocity / angular_velocity + R_epsilon);
+    RCLCPP_INFO(this->get_logger(), "--------------------------------");
   
     controller_ = Controller(
       linear_velocity,
@@ -121,8 +131,11 @@ public:
       resolution,
       lidar_angle_offset,
       window_size,
-      nu
+      nu,
+      history_size
     );
+    RCLCPP_INFO(this->get_logger(), "Controller initialized");
+    RCLCPP_INFO(this->get_logger(), "--------------------------------");
   }
 };
 
@@ -167,11 +180,10 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
               << controller_.get_dR_prev() << ","
               << static_cast<int>(controller_.state().state_name()) << ","
               << controller_.get_control_signal() << "\n";
-    log_file_.flush();
   }
   
   // Debug output
-  RCLCPP_INFO(this->get_logger(), "Mode: %s", controller_.state().name().data());
+  // RCLCPP_INFO(this->get_logger(), "Mode: %s", controller_.state().name().data());
 
   // Publish control signal
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();

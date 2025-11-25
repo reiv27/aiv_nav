@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <deque>
 #include <vector>
 #include <algorithm>
 
@@ -12,8 +13,24 @@ namespace utils
 */
 inline double sign(double x)
 {
-  if (x < 0.0) { return -1.0; }
-  else { return 1.0; }
+  if (std::abs(x) < 1e-8) {
+    return 0.0;
+  }
+  return x / std::abs(x);
+}
+
+/**
+* @brief Soft sign function
+* @param x Value to get soft sign of
+* @param eps Epsilon value
+* @return Soft sign of x
+*/
+inline double soft_sign(double x, double eps=0.1)
+{
+  if (std::abs(x) < 1e-8) {
+    return 0.0;
+  }
+  return x / (std::abs(x) + eps);
 }
 
 /**
@@ -30,22 +47,21 @@ inline double saturation(double x, double min_val, double max_val)
 
 /**
 * @brief Distance between two points
-* @param x1 First point x
-* @param y1 First point y
-* @param x2 Second point x
-* @param y2 Second point y
+* @param vec1 First point (x, y)
+* @param vec2 Second point (x, y)
 * @return Distance between two points
 */
 inline double norm2(const std::vector<double>& vec1, const std::vector<double>& vec2)
 {
-  return std::sqrt(std::pow(vec2[0] - vec1[0], 2) + std::pow(vec2[1] - vec1[1], 2));
+  const double dx = vec2[0] - vec1[0];
+  const double dy = vec2[1] - vec1[1];
+  return std::sqrt(dx * dx + dy * dy);
 }
 
 inline std::vector<double> normalize_vector(const std::vector<double>& v)
 {
-  std::vector<double> new_vec{v[0] / std::sqrt(v[0] * v[0] + v[1] * v[1]),
-                              v[1] / std::sqrt(v[0] * v[0] + v[1] * v[1])};
-  return new_vec;
+  const double norm = std::sqrt(v[0] * v[0] + v[1] * v[1]);
+  return {v[0] / norm, v[1] / norm};
 }
 
 inline double dot_product(const std::vector<double>& v1, const std::vector<double>& v2)
@@ -61,6 +77,14 @@ inline double angle_between_vectors(const std::vector<double>& v1,
   return std::abs(std::atan2(cross, dot));
 }
 
+/**
+* @brief Check if a point is in a sector
+* @param v Vertex of the sector
+* @param p1 First point of the sector
+* @param p2 Second point of the sector
+* @param r Robot pose (x, y)
+* @return True if the point is in the sector, false otherwise
+*/
 inline bool is_point_in_angle(const std::vector<double>& v,
                               const std::vector<double>& p1,
                               const std::vector<double>& p2,

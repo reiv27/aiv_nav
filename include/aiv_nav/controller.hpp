@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <memory>
 #include <cstdint>
 
@@ -30,7 +31,8 @@ public:
              int resolution,
              double lidar_angle_offset,
              uint64_t window_size=0,
-             double nu=1.0);
+             double nu=1.0,
+             int history_size=0);
   
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -197,6 +199,8 @@ private:
   double dR_prev_{0.0};
   double u_{0.0};
   double nu_;
+  int history_size_;
+  std::deque<double> u_history_; 
   std::vector<double> verA_{0.0, 0.0};
   std::vector<double> gap_point_1_{0.0, 0.0};
   std::vector<double> gap_point_2_{0.0, 0.0};
@@ -219,4 +223,11 @@ private:
    * @param lidar_data New lidar data
    */
    void set_lidar_data_(const std::vector<double>& lidar_data);
+
+   /**
+   * @brief Calculate moving average of the control signal
+   * @param u Control signal
+   * @return Moving average of the control signal
+   */
+   double moving_average_(double u);
 };
