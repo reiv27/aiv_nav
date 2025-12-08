@@ -183,12 +183,18 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   }
   
   // Debug output
-  // RCLCPP_INFO(this->get_logger(), "Mode: %s", controller_.state().name().data());
+  RCLCPP_INFO(this->get_logger(), "State: %lf, %lf, %lf", x, y, theta);
+  RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
+  RCLCPP_INFO(this->get_logger(), "Mode: %d", static_cast<int>(controller_.state().state_name()));
+  RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
+  RCLCPP_INFO(this->get_logger(), "Lidar closest point: %lf, %lf", controller_.get_closest_lidar_point()[0], controller_.get_closest_lidar_point()[1]);
+  RCLCPP_INFO(this->get_logger(), "Control signal: %lf", controller_.get_control_signal());
+  RCLCPP_INFO(this->get_logger(), " ");
 
   // Publish control signal
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
   cmd_vel_msg_.angular.z = controller_.get_control_signal();
-  cmd_vel_pub_->publish(cmd_vel_msg_);
+  // cmd_vel_pub_->publish(cmd_vel_msg_);
 }
 
 int main(int argc, char * argv[])
