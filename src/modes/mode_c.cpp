@@ -35,6 +35,5 @@ double ModeC::calculate_control_signal(Controller& ctrl)
   const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sign = utils::sign(ddR + second_part);
-  // const double sign = utils::soft_sign(ddR + second_part);
   return ctrl.get_angular_velocity() * sign;
 }

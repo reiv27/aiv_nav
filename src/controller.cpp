@@ -65,9 +65,6 @@ void Controller::update(const std::vector<double>& robot_state,
   t_prev_ = t_current;
 
   u_ = state_->calculate_control_signal(*this);
-  u_ = moving_average_(u_);
-  // std::cout << dt_ << std::endl;
-  // std::cout << "State: " << state_->name() << " Control signal: " << u_ << std::endl;
 }
 
 void Controller::set_state(std::unique_ptr<State> s)
