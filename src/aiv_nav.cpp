@@ -7,6 +7,9 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
+#include "visualization_msgs/msg/marker.hpp"
+#include "std_msgs/msg/color_rgba.hpp"
 // Message Filters
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
@@ -31,16 +34,21 @@ private:
   std::shared_ptr<message_filters::Synchronizer<
     message_filters::sync_policies::ApproximateTime<
       nav_msgs::msg::Odometry, sensor_msgs::msg::LaserScan>>> sync_;
-
+  
+  void publishDebugMarkers();
+  
   void syncCallback(
     const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
     const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan);
 
   Controller controller_;
 
-
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   geometry_msgs::msg::Twist cmd_vel_msg_;
+
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_markers_pub_;
+  visualization_msgs::msg::MarkerArray debug_markers_msg_;
+  
 
   // CSV logging
   std::ofstream log_file_;
@@ -76,6 +84,10 @@ public:
                 std::placeholders::_1, std::placeholders::_2));
 
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+
+    // Debug markers publisher
+    debug_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
+      "debug_markers", 10);
 
     // Open log file
     log_file_.open(
@@ -139,6 +151,149 @@ public:
   }
 };
 
+void AIVController::publishDebugMarkers()
+{
+  visualization_msgs::msg::MarkerArray marker_array;
+  auto now = this->now();
+
+  visualization_msgs::msg::Marker closest_lidar_marker;
+  closest_lidar_marker.header.frame_id = "odom";
+  closest_lidar_marker.header.stamp = now;
+  closest_lidar_marker.ns = "closest_lidar";
+  closest_lidar_marker.id = 0;
+  closest_lidar_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  closest_lidar_marker.action = visualization_msgs::msg::Marker::ADD;
+  closest_lidar_marker.pose.position.x = controller_.get_closest_lidar_point()[0];
+  closest_lidar_marker.pose.position.y = controller_.get_closest_lidar_point()[1];
+  closest_lidar_marker.pose.position.z = 0.0;
+  closest_lidar_marker.pose.orientation.w = 1.0;
+  closest_lidar_marker.scale.x = 0.1;
+  closest_lidar_marker.scale.y = 0.1;
+  closest_lidar_marker.scale.z = 0.1;
+  closest_lidar_marker.color.r = 1.0;
+  closest_lidar_marker.color.g = 0.0;
+  closest_lidar_marker.color.b = 0.0;
+  closest_lidar_marker.color.a = 1.0;
+  marker_array.markers.push_back(closest_lidar_marker);
+  
+  visualization_msgs::msg::Marker disk_marker;
+  disk_marker.header.frame_id = "odom";
+  disk_marker.header.stamp = now;
+  disk_marker.ns = "disk";
+  disk_marker.id = 0;
+  disk_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  disk_marker.action = visualization_msgs::msg::Marker::ADD;
+  disk_marker.pose.position.x = controller_.get_disk_pose()[0];
+  disk_marker.pose.position.y = controller_.get_disk_pose()[1];
+  disk_marker.pose.position.z = 0.0;
+  disk_marker.pose.orientation.w = 1.0;
+  disk_marker.scale.x = 0.15;
+  disk_marker.scale.y = 0.15;
+  disk_marker.scale.z = 0.15;
+  disk_marker.color.r = 0.0;
+  disk_marker.color.g = 0.0;
+  disk_marker.color.b = 1.0;
+  disk_marker.color.a = 1.0;
+  marker_array.markers.push_back(disk_marker);
+  
+  visualization_msgs::msg::Marker verA_marker;
+  verA_marker.header.frame_id = "odom";
+  verA_marker.header.stamp = now;
+  verA_marker.ns = "verA";
+  verA_marker.id = 0;
+  verA_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  verA_marker.action = visualization_msgs::msg::Marker::ADD;
+  verA_marker.pose.position.x = controller_.get_verA()[0];
+  verA_marker.pose.position.y = controller_.get_verA()[1];
+  verA_marker.pose.position.z = 0.0;
+  verA_marker.pose.orientation.w = 1.0;
+  verA_marker.scale.x = 0.12;
+  verA_marker.scale.y = 0.12;
+  verA_marker.scale.z = 0.12;
+  verA_marker.color.r = 0.0;
+  verA_marker.color.g = 1.0;
+  verA_marker.color.b = 0.0;
+  verA_marker.color.a = 1.0;
+  marker_array.markers.push_back(verA_marker);
+  
+  visualization_msgs::msg::Marker gap1_marker;
+  gap1_marker.header.frame_id = "odom";
+  gap1_marker.header.stamp = now;
+  gap1_marker.ns = "gap_point_1";
+  gap1_marker.id = 0;
+  gap1_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  gap1_marker.action = visualization_msgs::msg::Marker::ADD;
+  gap1_marker.pose.position.x = controller_.get_gap_point_1()[0];
+  gap1_marker.pose.position.y = controller_.get_gap_point_1()[1];
+  gap1_marker.pose.position.z = 0.0;
+  gap1_marker.pose.orientation.w = 1.0;
+  gap1_marker.scale.x = 0.1;
+  gap1_marker.scale.y = 0.1;
+  gap1_marker.scale.z = 0.1;
+  gap1_marker.color.r = 1.0;
+  gap1_marker.color.g = 1.0;
+  gap1_marker.color.b = 0.0;
+  gap1_marker.color.a = 1.0;
+  marker_array.markers.push_back(gap1_marker);
+  
+  visualization_msgs::msg::Marker gap2_marker;
+  gap2_marker.header.frame_id = "odom";
+  gap2_marker.header.stamp = now;
+  gap2_marker.ns = "gap_point_2";
+  gap2_marker.id = 0;
+  gap2_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  gap2_marker.action = visualization_msgs::msg::Marker::ADD;
+  gap2_marker.pose.position.x = controller_.get_gap_point_2()[0];
+  gap2_marker.pose.position.y = controller_.get_gap_point_2()[1];
+  gap2_marker.pose.position.z = 0.0;
+  gap2_marker.pose.orientation.w = 1.0;
+  gap2_marker.scale.x = 0.1;
+  gap2_marker.scale.y = 0.1;
+  gap2_marker.scale.z = 0.1;
+  gap2_marker.color.r = 1.0;
+  gap2_marker.color.g = 1.0;
+  gap2_marker.color.b = 0.0;
+  gap2_marker.color.a = 1.0;
+  marker_array.markers.push_back(gap2_marker);
+  
+  visualization_msgs::msg::Marker triangle_marker;
+  triangle_marker.header.frame_id = "odom";
+  triangle_marker.header.stamp = now;
+  triangle_marker.ns = "triangle_set";
+  triangle_marker.id = 0;
+  triangle_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+  triangle_marker.action = visualization_msgs::msg::Marker::ADD;
+  
+  geometry_msgs::msg::Point p1, p2, p3;
+  p1.x = controller_.get_verA()[0];
+  p1.y = controller_.get_verA()[1];
+  p1.z = 0.0;
+  
+  p2.x = controller_.get_gap_point_1()[0];
+  p2.y = controller_.get_gap_point_1()[1];
+  p2.z = 0.0;
+  
+  p3.x = controller_.get_gap_point_2()[0];
+  p3.y = controller_.get_gap_point_2()[1];
+  p3.z = 0.0;
+  
+  triangle_marker.points.push_back(p1);
+  triangle_marker.points.push_back(p2);
+  triangle_marker.points.push_back(p2);
+  triangle_marker.points.push_back(p3);
+  triangle_marker.points.push_back(p3);
+  triangle_marker.points.push_back(p1);
+  
+  triangle_marker.scale.x = 0.05;
+  triangle_marker.color.r = 0.0;
+  triangle_marker.color.g = 0.5;
+  triangle_marker.color.b = 1.0;
+  triangle_marker.color.a = 0.8;
+  marker_array.markers.push_back(triangle_marker);
+  
+  debug_markers_pub_->publish(marker_array);
+}
+
 void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
                                  const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
@@ -156,9 +311,7 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   // Update controller with new robot state and lidar data
   controller_.update(robot_state, lidar_data);
 
-
   // Log telemetry data
-  // state,x,y,theta,R_min,rho_0,min_dist,closest_lidar_x,closest_lidar_y,disk_x,disk_y
   if (log_file_.is_open()) {
     log_file_ 
               << robot_state[0] << ","
@@ -183,18 +336,21 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
   }
   
   // Debug output
-  RCLCPP_INFO(this->get_logger(), "State: %lf, %lf, %lf", x, y, theta);
-  RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Mode: %d", static_cast<int>(controller_.state().state_name()));
-  RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Lidar closest point: %lf, %lf", controller_.get_closest_lidar_point()[0], controller_.get_closest_lidar_point()[1]);
-  RCLCPP_INFO(this->get_logger(), "Control signal: %lf", controller_.get_control_signal());
-  RCLCPP_INFO(this->get_logger(), " ");
+  // RCLCPP_INFO(this->get_logger(), "State: %lf, %lf, %lf", x, y, theta);
+  // RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
+  // RCLCPP_INFO(this->get_logger(), "Mode: %d", static_cast<int>(controller_.state().state_name()));
+  // RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
+  // RCLCPP_INFO(this->get_logger(), "Lidar closest point: %lf, %lf", controller_.get_closest_lidar_point()[0], controller_.get_closest_lidar_point()[1]);
+  // RCLCPP_INFO(this->get_logger(), "Control signal: %lf", controller_.get_control_signal());
+  // RCLCPP_INFO(this->get_logger(), " ");
 
   // Publish control signal
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
   cmd_vel_msg_.angular.z = controller_.get_control_signal();
-  // cmd_vel_pub_->publish(cmd_vel_msg_);
+  cmd_vel_pub_->publish(cmd_vel_msg_);
+
+  // Publish debug markers
+  publishDebugMarkers();
 }
 
 int main(int argc, char * argv[])

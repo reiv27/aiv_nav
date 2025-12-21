@@ -51,18 +51,21 @@ plt.scatter(closest_lidar_point_x[-1], closest_lidar_point_y[-1], s=200, color='
             label='Closest Lidar Point')
 plt.scatter(lidar_point_x[-1], lidar_point_y[-1], s=100, color='red', label='Lidar Point')
 print()
+
+
+temp = 50
+print(f"dR: {dR[temp-1]}")
 for i in range(len(disk_x)):
   if state[i] == 2.0:
-    # print(f"dR: {dR[i]}")
-    # print(f"i: {i}")
-    # print(f"Control signal: {control_signal[i]}")
+    print(f"i: {i}")
+    print(f"dR: {dR[i]}")
+    print(f"Control signal: {control_signal[i]}")
     continue
   circle = Circle((disk_x[i], disk_y[i]), R_min, 
                   fill=False, edgecolor='blue', alpha=0.3, linewidth=0.5)
   plt.gca().add_patch(circle)
-# print()
+print()
 
-temp = 50
 circle = Circle((data[temp, 8], data[temp, 9]), R_min, 
                   fill=False, edgecolor='black', linewidth=1)
 plt.gca().add_patch(circle)
@@ -73,7 +76,7 @@ print(data[temp, 0], data[temp, 1])
 print(verA_x[temp], verA_y[temp])
 print(data[temp, 12], data[temp, 13])
 print(data[temp, 14], data[temp, 15])
-print("\nControl signal: ", data[temp, 18])
+# print("\nControl signal: ", data[temp, 18])
 
 plt.xlabel(r'$x$')
 plt.ylabel(r'$y$')

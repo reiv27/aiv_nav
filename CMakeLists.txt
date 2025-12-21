@@ -15,6 +15,8 @@ find_package(message_filters REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Controller library
 add_library(aiv_nav_controller
@@ -42,7 +44,9 @@ ament_target_dependencies(aiv_nav
   message_filters
   nav_msgs
   tf2
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+  visualization_msgs
+  std_msgs)
 
 # Install
 install(TARGETS aiv_nav aiv_nav_controller
@@ -65,7 +69,9 @@ ament_export_dependencies(
   message_filters
   nav_msgs
   tf2
-  tf2_geometry_msgs)
+  tf2_geometry_msgs
+  visualization_msgs
+  std_msgs)
 
 # Testing
 if(BUILD_TESTING)
