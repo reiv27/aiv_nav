@@ -198,6 +198,7 @@ private:
   double t_prev_{0.0};
   double dR_prev_{0.0};
   double u_{0.0};
+  double u_prev_{0.0};
   double nu_;
   int history_size_;
   std::deque<double> u_history_; 

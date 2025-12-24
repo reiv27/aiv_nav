@@ -65,6 +65,13 @@ void Controller::update(const std::vector<double>& robot_state,
   t_prev_ = t_current;
 
   u_ = state_->calculate_control_signal(*this);
+
+  // double tau = 0.15;
+  // double alpha = std::exp(-dt_ / tau);
+
+  // u_ = alpha * u_prev_ + (1 - alpha) * u_;
+  // u_prev_ = u_;
+  // u_ = moving_average_(u_);
 }
 
 void Controller::set_state(std::unique_ptr<State> s)
@@ -220,17 +227,12 @@ const std::vector<double>& Controller::get_gap_point_2() const
 
 double Controller::moving_average_(double u)
 {
-  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
   u_history_.pop_front();
-  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
   u_history_.push_back(u);
-  // std::cout << "u_history_.size(): " << u_history_.size() << std::endl;
-  // for (int i = 0; i < history_size_; ++i) {
-  //   std::cout << "u_history_[i]: " << u_history_[i] << std::endl;
-  // }
+  
   double sum = 0.0;
-  for (int i = 0; i < history_size_; ++i) {
-    sum += u_history_[i];
+  for (const auto& val : u_history_) {
+    sum += val;
   }
   return sum / history_size_;
 }
