@@ -91,7 +91,7 @@ public:
 
     // Open log file
     log_file_.open(
-      "/home/user/projects/ros2_ws/src/aiv_nav/debug/controller_telemetry.csv",
+      "/home/user/ros2_ws/src/aiv_nav/debug/controller_telemetry.csv",
       std::ios::out | std::ios::trunc
     );
     if (log_file_.is_open()) {
