@@ -1,7 +1,7 @@
 aiv_nav:
   ros__parameters:
     linear_velocity: 1.0
-    angular_velocity: 2.0
+    angular_velocity: 0.666667
     rho_0: 2.0
     R_epsilon: 0.0
     R_vis: 12.0
