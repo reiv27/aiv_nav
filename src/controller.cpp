@@ -252,8 +252,6 @@ double Controller::moving_average_(double u)
 
 bool Controller::estimate_curvature(double& kappa_out,
                                     double break_jump_m,
-                                    double max_fit_rms_error_m,
-                                    uint64_t min_points,
                                     int half_window) const
 {
   kappa_out = 0.0;
@@ -269,9 +267,7 @@ bool Controller::estimate_curvature(double& kappa_out,
     lidar_points_,
     R_vis_,
     half_window,
-    break_jump_m,
-    max_fit_rms_error_m,
-    min_points);
+    break_jump_m);
 }
 
 double Controller::get_curvature() const

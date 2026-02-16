@@ -7,7 +7,7 @@ aiv_nav:
     R_vis: 12.0
     resolution: 360
     lidar_angle_offset: 3.14159
-    window_size: 5
+    window_size: 10
     nu: 100.0
     history_size: 5
     curvature_points_size: 10

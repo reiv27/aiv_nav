@@ -171,25 +171,15 @@ public:
   const std::vector<double>& get_gap_point_2() const;
 
   /**
-   * @brief Estimate local obstacle curvature around closest lidar ray.
+   * @brief Estimate local obstacle curvature (3-point method, non-negative).
    *
-   * This method:
-   * - finds the closest finite lidar ray index,
-   * - extracts a local continuous segment of points (breaks on scan gaps),
-   * - fits a circle (least squares) and returns curvature kappa = 1 / R.
-   *
-   * @param kappa_out Output curvature (1 / radius). Set to 0.0 if invalid.
+   * @param kappa_out Output curvature. Set to 0.0 if invalid.
    * @param break_jump_m Break segment if neighbor distance exceeds this value.
-   * @param max_fit_rms_error_m Reject fit if RMS radial error exceeds this value.
-   * @param min_points Minimum number of points required to fit a circle.
-   * @param half_window Number of rays to extend left/right from the closest ray.
-   *                   If negative, the value is derived from curvature_points_size.
+   * @param half_window Rays to extend left/right from closest ray; if negative, from curvature_points_size.
    * @return True if curvature is valid, false otherwise.
    */
   bool estimate_curvature(double& kappa_out,
                           double break_jump_m = 0.3,
-                          double max_fit_rms_error_m = 0.05,
-                          uint64_t min_points = 8,
                           int half_window = -1) const;
 
   /**

@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cmath>
 #include <deque>
 #include <vector>
@@ -46,7 +47,7 @@ inline double saturation(double x, double min_val, double max_val)
 }
 
 /**
-* @brief Distance between two points
+* @brief Distance between two points (vector form)
 * @param vec1 First point (x, y)
 * @param vec2 Second point (x, y)
 * @return Distance between two points
@@ -55,6 +56,19 @@ inline double norm2(const std::vector<double>& vec1, const std::vector<double>& 
 {
   const double dx = vec2[0] - vec1[0];
   const double dy = vec2[1] - vec1[1];
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+/**
+* @brief Distance between two points (array form)
+* @param a First point (x, y)
+* @param b Second point (x, y)
+* @return Distance between two points
+*/
+inline double norm2(const std::array<double, 2>& a, const std::array<double, 2>& b)
+{
+  const double dx = b[0] - a[0];
+  const double dy = b[1] - a[1];
   return std::sqrt(dx * dx + dy * dy);
 }
 
