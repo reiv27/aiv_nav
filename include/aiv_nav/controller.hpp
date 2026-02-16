@@ -32,7 +32,8 @@ public:
              double lidar_angle_offset,
              uint64_t window_size=0,
              double nu=1.0,
-             int history_size=0);
+             int history_size=0,
+             int curvature_points_size=0);
   
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -169,6 +170,38 @@ public:
    */
   const std::vector<double>& get_gap_point_2() const;
 
+  /**
+   * @brief Estimate local obstacle curvature around closest lidar ray.
+   *
+   * This method:
+   * - finds the closest finite lidar ray index,
+   * - extracts a local continuous segment of points (breaks on scan gaps),
+   * - fits a circle (least squares) and returns curvature kappa = 1 / R.
+   *
+   * @param kappa_out Output curvature (1 / radius). Set to 0.0 if invalid.
+   * @param break_jump_m Break segment if neighbor distance exceeds this value.
+   * @param max_fit_rms_error_m Reject fit if RMS radial error exceeds this value.
+   * @param min_points Minimum number of points required to fit a circle.
+   * @param half_window Number of rays to extend left/right from the closest ray.
+   *                   If negative, the value is derived from curvature_points_size.
+   * @return True if curvature is valid, false otherwise.
+   */
+  bool estimate_curvature(double& kappa_out,
+                          double break_jump_m = 0.3,
+                          double max_fit_rms_error_m = 0.05,
+                          uint64_t min_points = 8,
+                          int half_window = -1) const;
+
+  /**
+   * @brief Get last computed curvature value.
+   */
+  double get_curvature() const;
+
+  /**
+   * @brief Check if last curvature estimate is valid.
+   */
+  bool is_curvature_valid() const;
+
 private:
   std::unique_ptr<State> state_{std::make_unique<ModeA>()};
 
@@ -210,25 +243,30 @@ private:
    * @brief Set output control signal
    * @param u New output control signal
    */
-   void set_control_signal_(double u);
+  void set_control_signal_(double u);
 
-   //TODO: Change name  set_robot_state() to something
-   /**
+  //TODO: Change name  set_robot_state() to something
+  /**
    * @brief Set new robot state (x, y, theta) !!!NOT FSM STATE!!!
    * @param robot_state New robot state
    */
-   void set_robot_state_(const std::vector<double>& robot_state);
+  void set_robot_state_(const std::vector<double>& robot_state);
 
-   /**
+  /**
    * @brief Set new lidar data
    * @param lidar_data New lidar data
    */
-   void set_lidar_data_(const std::vector<double>& lidar_data);
+  void set_lidar_data_(const std::vector<double>& lidar_data);
 
-   /**
+  /**
    * @brief Calculate moving average of the control signal
    * @param u Control signal
    * @return Moving average of the control signal
    */
-   double moving_average_(double u);
+  double moving_average_(double u);
+
+  // Curvature of obstacles
+  std::vector<double> curvature_points_{};
+  double curvature_{0.0};
+  bool curvature_valid_{false};
 };

@@ -110,6 +110,7 @@ public:
     this->declare_parameter<int>("window_size");
     this->declare_parameter<double>("nu");
     this->declare_parameter<int>("history_size");
+    this->declare_parameter<int>("curvature_points_size");
 
     double linear_velocity = this->get_parameter("linear_velocity").as_double();
     double angular_velocity = this->get_parameter("angular_velocity").as_double();
@@ -121,6 +122,7 @@ public:
     int window_size = this->get_parameter("window_size").as_int();
     double nu = this->get_parameter("nu").as_double();
     int history_size = this->get_parameter("history_size").as_int();
+    int curvature_points_size = this->get_parameter("curvature_points_size").as_int();
 
     RCLCPP_INFO(this->get_logger(), "linear_velocity: %f", linear_velocity);
     RCLCPP_INFO(this->get_logger(), "angular_velocity: %f", angular_velocity);
@@ -144,7 +146,8 @@ public:
       lidar_angle_offset,
       window_size,
       nu,
-      history_size
+      history_size,
+      curvature_points_size
     );
     RCLCPP_INFO(this->get_logger(), "Controller initialized");
     RCLCPP_INFO(this->get_logger(), "--------------------------------");

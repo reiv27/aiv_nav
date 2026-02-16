@@ -21,6 +21,7 @@ find_package(std_msgs REQUIRED)
 # Controller library
 add_library(aiv_nav_controller
   src/controller.cpp
+  src/curvature.cpp
   src/modes/mode_a.cpp
   src/modes/mode_c.cpp
   src/modes/mode_g.cpp

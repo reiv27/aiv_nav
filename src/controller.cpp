@@ -5,9 +5,10 @@
 #include <chrono>
 #include <iostream>
 #include <algorithm>
-
+#include <iostream>
 #include "aiv_nav/states.hpp"
 #include "aiv_nav/companion_disk.hpp"
+#include "aiv_nav/curvature.hpp"
 
 Controller::Controller()
     : linear_velocity_(0.0)
@@ -21,6 +22,7 @@ Controller::Controller()
     , nu_(0.0)
     , history_size_(0)
     , u_history_(0, 0.0)
+    , curvature_points_(0,0)
 {
 }
 
@@ -33,7 +35,8 @@ Controller::Controller(double linear_velocity,
                        double lidar_angle_offset,
                        uint64_t window_size,
                        double nu,
-                       int history_size)
+                       int history_size,
+                       int curvature_points_size)
     : linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , R_min_{ linear_velocity / angular_velocity + R_epsilon }
@@ -45,6 +48,7 @@ Controller::Controller(double linear_velocity,
     , nu_(nu)
     , history_size_(history_size)
     , u_history_(history_size, 0.0)
+    , curvature_points_(2 * curvature_points_size + 1, 0.0)
 {
 }
 
@@ -63,6 +67,14 @@ void Controller::update(const std::vector<double>& robot_state,
   const double t_current = std::chrono::duration<double>(duration).count();
   dt_ = t_current - t_prev_;
   t_prev_ = t_current;
+
+  double kappa = 0.0;
+  curvature_valid_ = estimate_curvature(kappa);
+  curvature_ = kappa;
+
+  if (curvature_valid_) {
+    std::cout << "kappa: " << kappa << std::endl;
+  }
 
   u_ = state_->calculate_control_signal(*this);
 
@@ -121,6 +133,7 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
 
   disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
   disk_.update_rays_length(lidar_points_, lidar_data);
+
 }
 
 const std::vector<double>& Controller::get_robot_state() const
@@ -235,4 +248,38 @@ double Controller::moving_average_(double u)
     sum += val;
   }
   return sum / history_size_;
+}
+
+bool Controller::estimate_curvature(double& kappa_out,
+                                    double break_jump_m,
+                                    double max_fit_rms_error_m,
+                                    uint64_t min_points,
+                                    int half_window) const
+{
+  kappa_out = 0.0;
+  if (half_window < 0) {
+    if (curvature_points_.size() < 3) {
+      return false;
+    }
+    half_window = static_cast<int>((curvature_points_.size() - 1) / 2);
+  }
+  return aiv_nav::curvature::estimate_curvature(
+    kappa_out,
+    lidar_data_,
+    lidar_points_,
+    R_vis_,
+    half_window,
+    break_jump_m,
+    max_fit_rms_error_m,
+    min_points);
+}
+
+double Controller::get_curvature() const
+{
+  return curvature_;
+}
+
+bool Controller::is_curvature_valid() const
+{
+  return curvature_valid_;
 }
