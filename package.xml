@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>aiv_nav</name>
+  <name>reactive_circumnav</name>
   <version>0.1.0</version>
-  <description>ROS2 package for using AIV navigation law with 2D LiDAR</description>
+  <description>ROS2 package for reactive circumnavigation with 2D LiDAR</description>
   <maintainer email="reiv.dev@gmail.com">Roman Eidelman</maintainer>
   <license>Apache-2.0</license>
 

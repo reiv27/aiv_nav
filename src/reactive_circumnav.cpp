@@ -21,19 +21,17 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 // Controller
-#include "aiv_nav/controller.hpp"
+#include "reactive_circumnav/controller.hpp"
 
-class AIVController : public rclcpp::Node
+class ReactiveCircumnav : public rclcpp::Node
 {
 private:
-
-  // Message filters trick: synchronize Odometry and LaserScan messages
-  // using message_filters subscribers and synchronizer
   std::shared_ptr<message_filters::Subscriber<nav_msgs::msg::Odometry>> odom_sub_;
   std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::LaserScan>> scan_sub_;
   std::shared_ptr<message_filters::Synchronizer<
     message_filters::sync_policies::ApproximateTime<
-      nav_msgs::msg::Odometry, sensor_msgs::msg::LaserScan>>> sync_;
+      nav_msgs::msg::Odometry,
+      sensor_msgs::msg::LaserScan>>> sync_;
   
   void publishDebugMarkers();
   
@@ -49,21 +47,23 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_markers_pub_;
   visualization_msgs::msg::MarkerArray debug_markers_msg_;
   
-
-  // CSV logging
   std::ofstream log_file_;
 
 public:
-  AIVController() : Node("aiv_nav")
-  {  
-    // Configure subscribers through message_filters::Subscriber
-    odom_sub_ = std::make_shared<message_filters::Subscriber<nav_msgs::msg::Odometry>>(
-      this, "odom", rmw_qos_profile_sensor_data);
-    
-    scan_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>(
-      this, "scan", rmw_qos_profile_sensor_data);
+  ReactiveCircumnav() : Node("reactive_circumnav")
+  {
+    this->declare_parameter<std::string>("odom_topic", "/odom");
+    this->declare_parameter<std::string>("scan_topic", "/scan");
 
-    // Policy ApproximateTime with queue size
+    const std::string odom_topic = this->get_parameter("odom_topic").as_string();
+    const std::string scan_topic = this->get_parameter("scan_topic").as_string();
+
+    odom_sub_ = std::make_shared<message_filters::Subscriber<nav_msgs::msg::Odometry>>(
+      this, odom_topic, rmw_qos_profile_sensor_data);
+
+    scan_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>(
+      this, scan_topic, rmw_qos_profile_sensor_data);
+
     using SyncPolicy =
       message_filters::sync_policies::ApproximateTime<
         nav_msgs::msg::Odometry,
@@ -73,25 +73,21 @@ public:
       SyncPolicy(10), *odom_sub_, *scan_sub_
     );
 
-    // Allowed "window" of desynchronization by stamp (slop)
     sync_->setMaxIntervalDuration(
       rclcpp::Duration::from_seconds(0.15)
     );
 
-    // Callback on synchronized pair of messages
     sync_->registerCallback(
-      std::bind(&AIVController::syncCallback, this,
+      std::bind(&ReactiveCircumnav::syncCallback, this,
                 std::placeholders::_1, std::placeholders::_2));
 
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
-    // Debug markers publisher
     debug_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
       "debug_markers", 10);
 
-    // Open log file
     log_file_.open(
-      "/home/user/ros2_ws/src/aiv_nav/debug/controller_telemetry.csv",
+      "/home/user/ros2_ws/src/reactive_circumnav/debug/controller_telemetry.csv",
       std::ios::out | std::ios::trunc
     );
     if (log_file_.is_open()) {
@@ -110,6 +106,7 @@ public:
     this->declare_parameter<int>("window_size");
     this->declare_parameter<double>("nu");
     this->declare_parameter<int>("history_size");
+    this->declare_parameter<int>("curvature_points_size");
 
     double linear_velocity = this->get_parameter("linear_velocity").as_double();
     double angular_velocity = this->get_parameter("angular_velocity").as_double();
@@ -121,6 +118,7 @@ public:
     int window_size = this->get_parameter("window_size").as_int();
     double nu = this->get_parameter("nu").as_double();
     int history_size = this->get_parameter("history_size").as_int();
+    int curvature_points_size = this->get_parameter("curvature_points_size").as_int();
 
     RCLCPP_INFO(this->get_logger(), "linear_velocity: %f", linear_velocity);
     RCLCPP_INFO(this->get_logger(), "angular_velocity: %f", angular_velocity);
@@ -144,20 +142,21 @@ public:
       lidar_angle_offset,
       window_size,
       nu,
-      history_size
+      history_size,
+      curvature_points_size
     );
     RCLCPP_INFO(this->get_logger(), "Controller initialized");
     RCLCPP_INFO(this->get_logger(), "--------------------------------");
   }
 };
 
-void AIVController::publishDebugMarkers()
+void ReactiveCircumnav::publishDebugMarkers()
 {
   visualization_msgs::msg::MarkerArray marker_array;
   auto now = this->now();
 
   visualization_msgs::msg::Marker closest_lidar_marker;
-  closest_lidar_marker.header.frame_id = "robot2/odom";
+  closest_lidar_marker.header.frame_id = "odom";
   closest_lidar_marker.header.stamp = now;
   closest_lidar_marker.ns = "closest_lidar";
   closest_lidar_marker.id = 0;
@@ -177,7 +176,7 @@ void AIVController::publishDebugMarkers()
   marker_array.markers.push_back(closest_lidar_marker);
   
   visualization_msgs::msg::Marker disk_marker;
-  disk_marker.header.frame_id = "robot2/odom";
+  disk_marker.header.frame_id = "odom";
   disk_marker.header.stamp = now;
   disk_marker.ns = "disk";
   disk_marker.id = 0;
@@ -197,7 +196,7 @@ void AIVController::publishDebugMarkers()
   marker_array.markers.push_back(disk_marker);
   
   visualization_msgs::msg::Marker verA_marker;
-  verA_marker.header.frame_id = "robot2/odom";
+  verA_marker.header.frame_id = "odom";
   verA_marker.header.stamp = now;
   verA_marker.ns = "verA";
   verA_marker.id = 0;
@@ -217,7 +216,7 @@ void AIVController::publishDebugMarkers()
   marker_array.markers.push_back(verA_marker);
   
   visualization_msgs::msg::Marker gap1_marker;
-  gap1_marker.header.frame_id = "robot2/odom";
+  gap1_marker.header.frame_id = "odom";
   gap1_marker.header.stamp = now;
   gap1_marker.ns = "gap_point_1";
   gap1_marker.id = 0;
@@ -237,7 +236,7 @@ void AIVController::publishDebugMarkers()
   marker_array.markers.push_back(gap1_marker);
   
   visualization_msgs::msg::Marker gap2_marker;
-  gap2_marker.header.frame_id = "robot2/odom";
+  gap2_marker.header.frame_id = "odom";
   gap2_marker.header.stamp = now;
   gap2_marker.ns = "gap_point_2";
   gap2_marker.id = 0;
@@ -257,7 +256,7 @@ void AIVController::publishDebugMarkers()
   marker_array.markers.push_back(gap2_marker);
   
   visualization_msgs::msg::Marker triangle_marker;
-  triangle_marker.header.frame_id = "robot2/odom";
+  triangle_marker.header.frame_id = "odom";
   triangle_marker.header.stamp = now;
   triangle_marker.ns = "triangle_set";
   triangle_marker.id = 0;
@@ -294,7 +293,7 @@ void AIVController::publishDebugMarkers()
   debug_markers_pub_->publish(marker_array);
 }
 
-void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
+void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& odom,
                                  const sensor_msgs::msg::LaserScan::ConstSharedPtr& scan)
 {
   // Convert odometry orientation to yaw
@@ -334,29 +333,18 @@ void AIVController::syncCallback(const nav_msgs::msg::Odometry::ConstSharedPtr& 
               << static_cast<int>(controller_.state().state_name()) << ","
               << controller_.get_control_signal() << "\n";
   }
-  
-  // Debug output
-  // RCLCPP_INFO(this->get_logger(), "State: %lf, %lf, %lf", x, y, theta);
-  // RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Mode: %d", static_cast<int>(controller_.state().state_name()));
-  // RCLCPP_INFO(this->get_logger(), "Lidar ray 0: %lf", lidar_data[0]);
-  RCLCPP_INFO(this->get_logger(), "Lidar closest point: %lf, %lf\n", controller_.get_closest_lidar_point()[0], controller_.get_closest_lidar_point()[1]);
-  // RCLCPP_INFO(this->get_logger(), "Control signal: %lf", controller_.get_control_signal());
-  // RCLCPP_INFO(this->get_logger(), " ");
 
-  // Publish control signal
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
   cmd_vel_msg_.angular.z = controller_.get_control_signal();
   cmd_vel_pub_->publish(cmd_vel_msg_);
 
-  // Publish debug markers
   publishDebugMarkers();
 }
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<AIVController>());
+  rclcpp::spin(std::make_shared<ReactiveCircumnav>());
   rclcpp::shutdown();
   return 0;
 }

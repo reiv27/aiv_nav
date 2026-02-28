@@ -1,4 +1,4 @@
-#include "aiv_nav/controller.hpp"
+#include "reactive_circumnav/controller.hpp"
 
 #include <cmath>
 #include <limits>
@@ -6,9 +6,9 @@
 #include <iostream>
 #include <algorithm>
 #include <iostream>
-#include "aiv_nav/states.hpp"
-#include "aiv_nav/companion_disk.hpp"
-#include "aiv_nav/curvature.hpp"
+#include "reactive_circumnav/states.hpp"
+#include "reactive_circumnav/companion_disk.hpp"
+#include "reactive_circumnav/curvature.hpp"
 
 Controller::Controller()
     : linear_velocity_(0.0)
@@ -261,7 +261,7 @@ bool Controller::estimate_curvature(double& kappa_out,
     }
     half_window = static_cast<int>((curvature_points_.size() - 1) / 2);
   }
-  return aiv_nav::curvature::estimate_curvature(
+  return reactive_circumnav::curvature::estimate_curvature(
     kappa_out,
     lidar_data_,
     lidar_points_,

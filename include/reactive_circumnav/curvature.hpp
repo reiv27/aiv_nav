@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace aiv_nav::curvature
+namespace reactive_circumnav::curvature
 {
 /**
  * @brief Estimate local curvature around closest lidar ray (3-point method).
@@ -28,5 +28,4 @@ bool estimate_curvature(double& kappa_out,
                         double r_vis,
                         int half_window,
                         double break_jump_m);
-}  // namespace aiv_nav::curvature
-
+}  // namespace reactive_circumnav::curvature

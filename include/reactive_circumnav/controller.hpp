@@ -4,8 +4,8 @@
 #include <memory>
 #include <cstdint>
 
-#include "aiv_nav/states.hpp"
-#include "aiv_nav/companion_disk.hpp"
+#include "reactive_circumnav/states.hpp"
+#include "reactive_circumnav/companion_disk.hpp"
 
 /**
  * @brief Main controller class

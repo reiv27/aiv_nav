@@ -1,4 +1,4 @@
-#include "aiv_nav/curvature.hpp"
+#include "reactive_circumnav/curvature.hpp"
 
 #include "utils/utils.hpp"
 
@@ -53,7 +53,7 @@ bool curvature_three_point(const std::array<double, 2>& P1,
 }
 }  // namespace
 
-namespace aiv_nav::curvature
+namespace reactive_circumnav::curvature
 {
 bool estimate_curvature(double& kappa_out,
                         const std::vector<double>& lidar_ranges,
@@ -169,5 +169,5 @@ bool estimate_curvature(double& kappa_out,
 
   return curvature_three_point(P1, P2, P3, kappa_out);
 }
-}  // namespace aiv_nav::curvature
+}  // namespace reactive_circumnav::curvature
 

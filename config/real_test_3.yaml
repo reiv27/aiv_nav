@@ -1,4 +1,4 @@
-aiv_nav:
+reactive_circumnav:
   ros__parameters:
     linear_velocity: 0.6
     angular_velocity: 0.3

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(aiv_nav)
+project(reactive_circumnav)
 
 # Compiler settings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -19,7 +19,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 # Controller library
-add_library(aiv_nav_controller
+add_library(reactive_circumnav_controller
   src/controller.cpp
   src/curvature.cpp
   src/modes/mode_a.cpp
@@ -28,17 +28,17 @@ add_library(aiv_nav_controller
   src/companion_disk.cpp
 )
 
-target_compile_features(aiv_nav_controller PUBLIC cxx_std_17)
-target_include_directories(aiv_nav_controller PUBLIC
+target_compile_features(reactive_circumnav_controller PUBLIC cxx_std_17)
+target_include_directories(reactive_circumnav_controller PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
 # Main executable
-add_executable(aiv_nav src/aiv_nav.cpp)
+add_executable(reactive_circumnav src/reactive_circumnav.cpp)
 
-target_compile_features(aiv_nav PUBLIC cxx_std_17)
-target_link_libraries(aiv_nav aiv_nav_controller)
-ament_target_dependencies(aiv_nav
+target_compile_features(reactive_circumnav PUBLIC cxx_std_17)
+target_link_libraries(reactive_circumnav reactive_circumnav_controller)
+ament_target_dependencies(reactive_circumnav
   rclcpp
   sensor_msgs
   geometry_msgs
@@ -50,8 +50,8 @@ ament_target_dependencies(aiv_nav
   std_msgs)
 
 # Install
-install(TARGETS aiv_nav aiv_nav_controller
-  EXPORT aiv_nav_controllerTargets
+install(TARGETS reactive_circumnav reactive_circumnav_controller
+  EXPORT reactive_circumnav_controllerTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -61,7 +61,7 @@ install(DIRECTORY include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.hpp")
 
-ament_export_targets(aiv_nav_controllerTargets HAS_LIBRARY_TARGET)
+ament_export_targets(reactive_circumnav_controllerTargets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
 ament_export_dependencies(
   rclcpp
