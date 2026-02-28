@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(reactive_circumnav)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Compiler settings
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -34,8 +36,13 @@ target_include_directories(reactive_circumnav_controller PUBLIC
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
 # Main executable
-add_executable(reactive_circumnav src/reactive_circumnav.cpp)
+add_executable(reactive_circumnav
+  src/reactive_circumnav.cpp
+  src/debug_markers.cpp
+)
 
+target_include_directories(reactive_circumnav PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(reactive_circumnav PUBLIC cxx_std_17)
 target_link_libraries(reactive_circumnav reactive_circumnav_controller)
 ament_target_dependencies(reactive_circumnav
@@ -60,6 +67,10 @@ install(TARGETS reactive_circumnav reactive_circumnav_controller
 install(DIRECTORY include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.hpp")
+
+install(DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
+  FILES_MATCHING PATTERN "*.yaml")
 
 ament_export_targets(reactive_circumnav_controllerTargets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)

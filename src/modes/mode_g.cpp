@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "utils/utils.hpp"
 #include "reactive_circumnav/controller.hpp"
+#include "utils/utils.hpp"
 
 std::string_view ModeG::name() const
 {

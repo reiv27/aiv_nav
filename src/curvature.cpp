@@ -1,10 +1,10 @@
 #include "reactive_circumnav/curvature.hpp"
 
-#include "utils/utils.hpp"
-
 #include <array>
 #include <cmath>
 #include <limits>
+
+#include "utils/utils.hpp"
 
 namespace
 {

@@ -1,14 +1,14 @@
 #include "reactive_circumnav/controller.hpp"
 
-#include <cmath>
-#include <limits>
-#include <chrono>
-#include <iostream>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <iostream>
-#include "reactive_circumnav/states.hpp"
+#include <limits>
+
 #include "reactive_circumnav/companion_disk.hpp"
 #include "reactive_circumnav/curvature.hpp"
+#include "reactive_circumnav/states.hpp"
 
 Controller::Controller()
     : linear_velocity_(0.0)

@@ -1,8 +1,8 @@
 #include "reactive_circumnav/companion_disk.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <algorithm>
 
 #include "utils/utils.hpp"
 

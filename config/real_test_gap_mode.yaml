@@ -1,5 +1,6 @@
 reactive_circumnav:
   ros__parameters:
+    telemetry_log_path: "/home/user/ros2_ws/src/reactive_circumnav/results/controller_telemetry.csv"
     linear_velocity: 0.5
     angular_velocity: 1.0
     rho_0: 2.0

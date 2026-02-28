@@ -1,4 +1,5 @@
-#pragma once
+#ifndef REACTIVE_CIRCUMNAV_CURVATURE_HPP
+#define REACTIVE_CIRCUMNAV_CURVATURE_HPP
 
 #include <cstdint>
 #include <vector>
@@ -29,3 +30,5 @@ bool estimate_curvature(double& kappa_out,
                         int half_window,
                         double break_jump_m);
 }  // namespace reactive_circumnav::curvature
+
+#endif  // REACTIVE_CIRCUMNAV_CURVATURE_HPP

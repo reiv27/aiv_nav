@@ -1,9 +1,11 @@
-#pragma once
+#ifndef UTILS_UTILS_HPP
+#define UTILS_UTILS_HPP
+
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <deque>
 #include <vector>
-#include <algorithm>
 
 namespace utils
 {
@@ -83,7 +85,7 @@ inline double dot_product(const std::vector<double>& v1, const std::vector<doubl
   return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
-inline double angle_between_vectors(const std::vector<double>& v1, 
+inline double angle_between_vectors(const std::vector<double>& v1,
                                     const std::vector<double>& v2)
 {
   const double cross = v1[0] * v2[1] - v1[1] * v2[0];
@@ -119,4 +121,6 @@ inline bool is_point_in_angle(const std::vector<double>& v,
   return (angle_vr_p1 <= angle_p1_p2) && (angle_vr_p2 <= angle_p1_p2);
 }
 
-} // namespace utils
+}  // namespace utils
+
+#endif  // UTILS_UTILS_HPP

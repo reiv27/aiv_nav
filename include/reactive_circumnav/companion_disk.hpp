@@ -1,7 +1,8 @@
-#pragma once
+#ifndef REACTIVE_CIRCUMNAV_COMPANION_DISK_HPP
+#define REACTIVE_CIRCUMNAV_COMPANION_DISK_HPP
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 class CompanionDisk
 {
@@ -14,7 +15,7 @@ public:
    * @return Disk pose (x, y)
    */
   const std::vector<double>& get_pose() const;
-  
+
   /**
    * @brief Get rays length
    * @return Rays length
@@ -43,13 +44,13 @@ public:
    * @return Disk min length
    */
   double get_min_ray_length() const;
-  
+
   /**
    * @brief Get disk min arg
    * @return Disk min arg
    */
   uint64_t get_min_arg() const;
-  
+
 private:
   double R_;
   uint64_t resolution_;
@@ -60,3 +61,5 @@ private:
   double min_ray_length_{0.0};
   uint64_t min_arg_{0};
 };
+
+#endif  // REACTIVE_CIRCUMNAV_COMPANION_DISK_HPP

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef REACTIVE_CIRCUMNAV_STATES_HPP
+#define REACTIVE_CIRCUMNAV_STATES_HPP
 
 #include <string_view>
 
@@ -41,14 +42,14 @@ public:
    void handle(Controller& context) override;
    std::string_view name() const override;
    StateName state_name() const override;
- 
+
    double calculate_control_signal(Controller& context) override;
- 
+
  private:
    bool goal_flag_{true};
    double goal_angle_{0.0};
  };
- 
+
  /**
   * @brief Controller Contact Mode C implementation
   */
@@ -58,10 +59,10 @@ public:
    void handle(Controller& context) override;
    std::string_view name() const override;
    StateName state_name() const override;
- 
+
    double calculate_control_signal(Controller& context) override;
  };
- 
+
  /**
   * @brief Controller Gap Mode G implementation
   */
@@ -74,3 +75,5 @@ public:
 
    double calculate_control_signal(Controller& context) override;
  };
+
+#endif  // REACTIVE_CIRCUMNAV_STATES_HPP

@@ -2,6 +2,7 @@ reactive_circumnav:
   ros__parameters:
     odom_topic: "/odom"
     scan_topic: "/scan"
+    telemetry_log_path: "/home/user/ros2_ws/src/reactive_circumnav/results/controller_telemetry.csv"
     linear_velocity: 1.0
     angular_velocity: 0.666666
     rho_0: 2.0

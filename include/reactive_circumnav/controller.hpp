@@ -1,11 +1,12 @@
-#pragma once
+#ifndef REACTIVE_CIRCUMNAV_CONTROLLER_HPP
+#define REACTIVE_CIRCUMNAV_CONTROLLER_HPP
 
+#include <cstdint>
 #include <deque>
 #include <memory>
-#include <cstdint>
 
-#include "reactive_circumnav/states.hpp"
 #include "reactive_circumnav/companion_disk.hpp"
+#include "reactive_circumnav/states.hpp"
 
 /**
  * @brief Main controller class
@@ -34,7 +35,7 @@ public:
              double nu=1.0,
              int history_size=0,
              int curvature_points_size=0);
-  
+
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
   Controller(Controller&&) = default;
@@ -143,7 +144,7 @@ public:
    * @param verA New verA pose (x, y)
    */
   void set_verA(const std::vector<double>& verA);
-  
+
   /**
    * @brief Get verA pose
    * @return VerA pose (x, y)
@@ -224,7 +225,7 @@ private:
   double u_prev_{0.0};
   double nu_;
   int history_size_;
-  std::deque<double> u_history_; 
+  std::deque<double> u_history_;
   std::vector<double> verA_{0.0, 0.0};
   std::vector<double> gap_point_1_{0.0, 0.0};
   std::vector<double> gap_point_2_{0.0, 0.0};
@@ -260,3 +261,5 @@ private:
   double curvature_{0.0};
   bool curvature_valid_{false};
 };
+
+#endif  // REACTIVE_CIRCUMNAV_CONTROLLER_HPP
