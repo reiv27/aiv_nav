@@ -72,6 +72,10 @@ install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
   FILES_MATCHING PATTERN "*.yaml")
 
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+  FILES_MATCHING PATTERN "*.py")
+
 ament_export_targets(reactive_circumnav_controllerTargets HAS_LIBRARY_TARGET)
 ament_export_include_directories(include)
 ament_export_dependencies(
