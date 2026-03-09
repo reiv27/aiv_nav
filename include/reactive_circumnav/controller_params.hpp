@@ -1,6 +1,8 @@
 #ifndef REACTIVE_CIRCUMNAV_CONTROLLER_PARAMS_HPP
 #define REACTIVE_CIRCUMNAV_CONTROLLER_PARAMS_HPP
 
+#include <string>
+
 #include "rclcpp/rclcpp.hpp"
 
 namespace reactive_circumnav
@@ -11,6 +13,7 @@ namespace reactive_circumnav
  */
 struct ControllerParams
 {
+  std::string mode_c_control_type{"relay"};
   double linear_velocity{0.0};
   double angular_velocity{0.0};
   double rho_0{0.0};
@@ -31,6 +34,7 @@ struct ControllerParams
  */
 inline ControllerParams load_controller_params(rclcpp::Node* node)
 {
+  node->declare_parameter<std::string>("mode_c_control_type", "Relay");
   node->declare_parameter<double>("linear_velocity", 1.0);
   node->declare_parameter<double>("angular_velocity", 2.0 / 3.0);
   node->declare_parameter<double>("rho_0", 2.0);
@@ -44,6 +48,7 @@ inline ControllerParams load_controller_params(rclcpp::Node* node)
   node->declare_parameter<int>("curvature_points_size", 10);
 
   ControllerParams p;
+  p.mode_c_control_type = node->get_parameter("mode_c_control_type").as_string();
   p.linear_velocity = node->get_parameter("linear_velocity").as_double();
   p.angular_velocity = node->get_parameter("angular_velocity").as_double();
   p.rho_0 = node->get_parameter("rho_0").as_double();

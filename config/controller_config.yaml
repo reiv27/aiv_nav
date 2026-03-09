@@ -1,5 +1,6 @@
 reactive_circumnav:
   ros__parameters:
+    mode_c_control_type: "relay"  # "relay", "sta"
     odom_topic: "/odom"
     scan_topic: "/scan"
     telemetry_log_path: "/home/user/ros2_ws/src/reactive_circumnav/results/controller_telemetry.csv"

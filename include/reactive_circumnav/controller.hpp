@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <memory>
+#include <string>
 
 #include "reactive_circumnav/companion_disk.hpp"
 #include "reactive_circumnav/states.hpp"
@@ -34,7 +36,8 @@ public:
              uint64_t window_size=0,
              double nu=1.0,
              int history_size=0,
-             int curvature_points_size=0);
+             int curvature_points_size=0,
+             const std::string& mode_c_control_type="Relay");
 
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -127,6 +130,16 @@ public:
    * @brief Get nu
    */
   double get_nu() const;
+
+  /**
+   * @brief Get Mode C control type ("relay" or "sta")
+   */
+  const std::string& get_mode_c_control_type() const;
+
+  /**
+   * @brief Compute Mode C control signal using the function selected at construction.
+   */
+  double compute_mode_c_control();
 
   /**
    * @brief Get disk min length
@@ -224,6 +237,8 @@ private:
   double u_{0.0};
   double u_prev_{0.0};
   double nu_;
+  std::string mode_c_control_type_{"relay"};
+  std::function<double(Controller&)> mode_c_control_fn_{};
   int history_size_;
   std::deque<double> u_history_;
   std::vector<double> verA_{0.0, 0.0};
@@ -255,6 +270,11 @@ private:
    * @return Moving average of the control signal
    */
   double moving_average_(double u);
+
+  // Реализации законов управления для режима C (выбор по имени в конструкторе)
+  static double relay_mode_c_control_(Controller& ctrl);
+  static double sta_mode_c_control_(Controller& ctrl);
+  static std::function<double(Controller&)> get_mode_c_control_fn_(const std::string& name);
 
   // Curvature of obstacles
   std::vector<double> curvature_points_{};

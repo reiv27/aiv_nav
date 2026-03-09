@@ -5,10 +5,12 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <unordered_map>
 
 #include "reactive_circumnav/companion_disk.hpp"
 #include "reactive_circumnav/curvature.hpp"
 #include "reactive_circumnav/states.hpp"
+#include "utils/utils.hpp"
 
 Controller::Controller()
     : linear_velocity_(0.0)
@@ -22,8 +24,9 @@ Controller::Controller()
     , nu_(0.0)
     , history_size_(0)
     , u_history_(0, 0.0)
-    , curvature_points_(0,0)
+    , curvature_points_(0, 0.0)
 {
+  mode_c_control_fn_ = &Controller::relay_mode_c_control_;
 }
 
 Controller::Controller(double linear_velocity,
@@ -36,7 +39,8 @@ Controller::Controller(double linear_velocity,
                        uint64_t window_size,
                        double nu,
                        int history_size,
-                       int curvature_points_size)
+                       int curvature_points_size,
+                       const std::string& mode_c_control_type)
     : linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , R_min_{ linear_velocity / angular_velocity + R_epsilon }
@@ -46,10 +50,46 @@ Controller::Controller(double linear_velocity,
     , lidar_angle_offset_(lidar_angle_offset)
     , disk_{ R_min_, resolution_, window_size }
     , nu_(nu)
+    , mode_c_control_type_(mode_c_control_type)
+    , mode_c_control_fn_(get_mode_c_control_fn_(mode_c_control_type))
     , history_size_(history_size)
     , u_history_(history_size, 0.0)
     , curvature_points_(2 * curvature_points_size + 1, 0.0)
 {
+}
+
+double Controller::relay_mode_c_control_(Controller& ctrl)
+{
+  const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
+  const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
+  ctrl.set_dR_prev(dR);
+  const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
+  const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
+  const double sigma = ddR + second_part;
+  const double sign = utils::soft_sign(sigma, 0.0);
+  return ctrl.get_angular_velocity() * sign;
+}
+
+double Controller::sta_mode_c_control_(Controller& ctrl)
+{
+  const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
+  const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
+  ctrl.set_dR_prev(dR);
+  const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
+  const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
+  const double sigma = ddR + second_part;
+  const double sign = utils::soft_sign(sigma, 0.0);
+  return ctrl.get_angular_velocity() * sign;
+}
+
+std::function<double(Controller&)> Controller::get_mode_c_control_fn_(const std::string& name)
+{
+  static const std::unordered_map<std::string, std::function<double(Controller&)>> table = {
+    {"relay", &Controller::relay_mode_c_control_},
+    {"sta", &Controller::sta_mode_c_control_},
+  };
+  auto it = table.find(name);
+  return (it != table.end()) ? it->second : &Controller::relay_mode_c_control_;
 }
 
 void Controller::update(const std::vector<double>& robot_state,
@@ -199,6 +239,16 @@ void Controller::set_dR_prev(double dR_prev)
 double Controller::get_nu() const
 {
   return nu_;
+}
+
+const std::string& Controller::get_mode_c_control_type() const
+{
+  return mode_c_control_type_;
+}
+
+double Controller::compute_mode_c_control()
+{
+  return mode_c_control_fn_(*this);
 }
 
 double Controller::get_disk_min_ray_length() const
