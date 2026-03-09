@@ -34,7 +34,7 @@ struct ControllerParams
  */
 inline ControllerParams load_controller_params(rclcpp::Node* node)
 {
-  node->declare_parameter<std::string>("mode_c_control_type", "Relay");
+  node->declare_parameter<std::string>("mode_c_control_type", "relay");
   node->declare_parameter<double>("linear_velocity", 1.0);
   node->declare_parameter<double>("angular_velocity", 2.0 / 3.0);
   node->declare_parameter<double>("rho_0", 2.0);

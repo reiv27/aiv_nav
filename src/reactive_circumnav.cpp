@@ -54,7 +54,7 @@ public:
     this->declare_parameter<std::string>("scan_topic", "/scan");
     this->declare_parameter<std::string>(
       "telemetry_log_path",
-      "/home/user/ros2_ws/src/reactive_circumnav/results/controller_telemetry.csv");
+      "/home/user/workspace/src/reactive_circumnav/results/controller_telemetry.csv");
 
     const std::string odom_topic = this->get_parameter("odom_topic").as_string();
     const std::string scan_topic = this->get_parameter("scan_topic").as_string();
@@ -101,6 +101,7 @@ public:
     reactive_circumnav::ControllerParams p =
       reactive_circumnav::load_controller_params(this);
 
+    RCLCPP_INFO(this->get_logger(), "Mode C control type: %s", p.mode_c_control_type.c_str());
     RCLCPP_INFO(this->get_logger(), "linear_velocity: %f", p.linear_velocity);
     RCLCPP_INFO(this->get_logger(), "angular_velocity: %f", p.angular_velocity);
     RCLCPP_INFO(this->get_logger(), "rho_0: %f", p.rho_0);
@@ -167,7 +168,8 @@ void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedP
       << controller_.get_lidar_points()[controller_.get_disk_min_arg()][1] << ","
       << controller_.get_dR_prev() << ","
       << static_cast<int>(controller_.state().state_name()) << ","
-      << controller_.get_control_signal() << "\n";
+      << controller_.get_control_signal() << ","
+      << controller_.get_dR_dot() << "\n";
   }
 
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();

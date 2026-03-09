@@ -37,7 +37,7 @@ public:
              double nu=1.0,
              int history_size=0,
              int curvature_points_size=0,
-             const std::string& mode_c_control_type="Relay");
+             const std::string& mode_c_control_type="relay");
 
   Controller(const Controller&) = delete;
   Controller& operator=(const Controller&) = delete;
@@ -125,6 +125,16 @@ public:
    * @brief Set dR_prev
    */
   void set_dR_prev(double dR_prev);
+
+  /**
+   * @brief Get dR_dot (derivative of dR, set by control logic)
+   */
+  double get_dR_dot() const;
+
+  /**
+   * @brief Set dR_dot (used by states when computing control)
+   */
+  void set_dR_dot(double dR_dot);
 
   /**
    * @brief Get nu
@@ -234,6 +244,7 @@ private:
   double dt_{0.0};
   double t_prev_{0.0};
   double dR_prev_{0.0};
+  double dR_dot_{0.0};
   double u_{0.0};
   double u_prev_{0.0};
   double nu_;

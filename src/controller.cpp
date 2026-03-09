@@ -63,6 +63,7 @@ double Controller::relay_mode_c_control_(Controller& ctrl)
   const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
   const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
   ctrl.set_dR_prev(dR);
+  ctrl.set_dR_dot(ddR);
   const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sigma = ddR + second_part;
@@ -75,6 +76,7 @@ double Controller::sta_mode_c_control_(Controller& ctrl)
   const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
   const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
   ctrl.set_dR_prev(dR);
+  ctrl.set_dR_dot(ddR);
   const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sigma = ddR + second_part;
@@ -234,6 +236,16 @@ double Controller::get_dR_prev() const
 void Controller::set_dR_prev(double dR_prev)
 {
   dR_prev_ = dR_prev;
+}
+
+double Controller::get_dR_dot() const
+{
+  return dR_dot_;
+}
+
+void Controller::set_dR_dot(double dR_dot)
+{
+  dR_dot_ = dR_dot;
 }
 
 double Controller::get_nu() const

@@ -31,6 +31,7 @@ double ModeG::calculate_control_signal(Controller& ctrl)
   const double dR = ctrl.get_R_min() - utils::norm2(ctrl.get_verA(), ctrl.get_robot_state());
   const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
   ctrl.set_dR_prev(dR);
+  ctrl.set_dR_dot(ddR);
   const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sign = utils::sign(ddR + second_part);
