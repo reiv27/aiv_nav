@@ -27,6 +27,8 @@ COL_DR = 16
 COL_STATE = 17
 COL_U = 18
 COL_DR_DOT = 19  # present if CSV has 20 columns (new controller log)
+COL_KAPPA = 20   # curvature, present if CSV has 21 columns
+COL_DT = 21      # dt, present if CSV has 22 columns
 
 FONT_SIZE_LABEL = 20
 FONT_SIZE_TITLE = 28
@@ -52,6 +54,14 @@ def extract_arrays(data, n, t1, t2):
     dR_dot = data[:, COL_DR_DOT]
   else:
     dR_dot = None
+  if data.shape[1] > COL_KAPPA:
+    kappa_full = data[:, COL_KAPPA]
+  else:
+    kappa_full = None
+  if data.shape[1] > COL_DT:
+    dt_full = data[:, COL_DT]
+  else:
+    dt_full = None
   x = data[t1:t2, COL_X]
   y = data[t1:t2, COL_Y]
   disk_x = data[t1:t2, COL_DISK_X]
@@ -65,7 +75,7 @@ def extract_arrays(data, n, t1, t2):
   return {
     'n': n, 't1': t1, 't2': t2,
     'R_min': R_min, 'rho_0': rho_0,
-    'dR': dR, 'dR_dot': dR_dot, 'u_full': u_full,
+    'dR': dR, 'dR_dot': dR_dot, 'u_full': u_full, 'kappa_full': kappa_full, 'dt_full': dt_full,
     'state': state, 'control_signal': control_signal,
     'x': x, 'y': y,
     'disk_x': disk_x, 'disk_y': disk_y,
@@ -164,32 +174,59 @@ def plot_distance_to_equidistant(dR, n, R_min, skip=0):
   plt.close()
 
 
-def plot_dr_drdot_u(dR, dR_dot, u_full, n):
-  """Second figure: 3 subplots — dR, dR_dot, u. Uses all data [0:n]."""
+def plot_dr_drdot_u(dR, dR_dot, u_full, n, kappa_full=None, dt_full=None):
+  """Second figure: dR, dR_dot, u, kappa, dt. Uses all data [0:n]. kappa, dt optional."""
   if dR_dot is None:
     dR_dot = np.gradient(dR, np.arange(n))
   ticks = np.arange(0, n)
 
-  fig, axes = plt.subplots(3, 1, figsize=(24, 10), sharex=True)
-  axes[0].plot(ticks, dR, color='black')
-  axes[0].axhline(0.0, color='blue', linestyle='--')
-  axes[0].set_ylabel(r'$d_R$, m', fontsize=FONT_SIZE_LABEL)
-  axes[0].set_title(r'$d_R$', fontsize=24)
-  axes[0].grid(True)
-  axes[0].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  n_axes = 3
+  if kappa_full is not None:
+    n_axes += 1
+  if dt_full is not None:
+    n_axes += 1
+  fig, axes = plt.subplots(n_axes, 1, figsize=(24, 4 * n_axes), sharex=True)
+  ax_idx = 0
 
-  axes[1].plot(ticks, dR_dot, color='green')
-  axes[1].set_ylabel(r'$\dot{d}_R$', fontsize=FONT_SIZE_LABEL)
-  axes[1].set_title(r'$\dot{d}_R$', fontsize=24)
-  axes[1].grid(True)
-  axes[1].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  axes[ax_idx].plot(ticks, dR, color='black')
+  axes[ax_idx].axhline(0.0, color='blue', linestyle='--')
+  axes[ax_idx].set_ylabel(r'$d_R$, m', fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_title(r'$d_R$', fontsize=24)
+  axes[ax_idx].grid(True)
+  axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  ax_idx += 1
 
-  axes[2].plot(ticks, u_full, color='red')
-  axes[2].set_ylabel(r'$u$', fontsize=FONT_SIZE_LABEL)
-  axes[2].set_xlabel(r'$ticks$', fontsize=FONT_SIZE_LABEL)
-  axes[2].set_title(r'$u$', fontsize=24)
-  axes[2].grid(True)
-  axes[2].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  axes[ax_idx].plot(ticks, dR_dot, color='green')
+  axes[ax_idx].set_ylabel(r'$\dot{d}_R$', fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_title(r'$\dot{d}_R$', fontsize=24)
+  axes[ax_idx].grid(True)
+  axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  ax_idx += 1
+
+  axes[ax_idx].plot(ticks, u_full, color='red')
+  axes[ax_idx].set_ylabel(r'$u$', fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_xlabel(r'$ticks$' if n_axes == 3 else None, fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_title(r'$u$', fontsize=24)
+  axes[ax_idx].grid(True)
+  axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+  ax_idx += 1
+
+  if kappa_full is not None:
+    axes[ax_idx].plot(ticks, kappa_full, color='purple')
+    axes[ax_idx].set_ylabel(r'$\kappa$', fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_xlabel(r'$ticks$' if dt_full is None else None, fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_title(r'$\kappa$ (curvature)', fontsize=24)
+    axes[ax_idx].grid(True)
+    axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+    ax_idx += 1
+
+  if dt_full is not None:
+    axes[ax_idx].plot(ticks, dt_full, color='brown')
+    axes[ax_idx].set_ylabel(r'$dt$, s', fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_xlabel(r'$ticks$', fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_title(r'$dt$', fontsize=24)
+    axes[ax_idx].grid(True)
+    axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
 
   plt.tight_layout()
   plt.show()
@@ -223,7 +260,11 @@ def main():
   # First figure: only range [t1:t2] (slice in arr)
   plot_disk_and_path(arr, arr['R_min'])
   # Second figure: all data [0:n]
-  plot_dr_drdot_u(arr['dR'], arr['dR_dot'], arr['u_full'], n)
+  plot_dr_drdot_u(
+    arr['dR'], arr['dR_dot'], arr['u_full'], n,
+    kappa_full=arr.get('kappa_full'),
+    dt_full=arr.get('dt_full'),
+  )
 
 
 if __name__ == '__main__':

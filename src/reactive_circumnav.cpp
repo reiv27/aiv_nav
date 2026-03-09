@@ -122,7 +122,10 @@ public:
       p.window_size,
       p.nu,
       p.history_size,
-      p.curvature_points_size
+      p.curvature_points_size,
+      p.k1,
+      p.k2,
+      p.mode_c_control_type
     );
     RCLCPP_INFO(this->get_logger(), "Controller initialized");
     RCLCPP_INFO(this->get_logger(), "--------------------------------");
@@ -169,7 +172,9 @@ void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedP
       << controller_.get_dR_prev() << ","
       << static_cast<int>(controller_.state().state_name()) << ","
       << controller_.get_control_signal() << ","
-      << controller_.get_dR_dot() << "\n";
+      << controller_.get_dR_dot() << ","
+      << controller_.get_curvature() << ","
+      << controller_.get_dt() << "\n";
   }
 
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();

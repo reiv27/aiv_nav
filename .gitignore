@@ -8,4 +8,3 @@ log/
 compile_commands.json
 
 # Data and results (keep scripts in results/)
-*.csv

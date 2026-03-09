@@ -25,6 +25,8 @@ struct ControllerParams
   double nu{1.0};
   int history_size{0};
   int curvature_points_size{0};
+  double k1{1.0};
+  double k2{1.0};
 };
 
 /**
@@ -46,6 +48,8 @@ inline ControllerParams load_controller_params(rclcpp::Node* node)
   node->declare_parameter<double>("nu", 100.0);
   node->declare_parameter<int>("history_size", 5);
   node->declare_parameter<int>("curvature_points_size", 10);
+  node->declare_parameter<double>("k1", 1.0);
+  node->declare_parameter<double>("k2", 1.0);
 
   ControllerParams p;
   p.mode_c_control_type = node->get_parameter("mode_c_control_type").as_string();
@@ -60,6 +64,8 @@ inline ControllerParams load_controller_params(rclcpp::Node* node)
   p.nu = node->get_parameter("nu").as_double();
   p.history_size = node->get_parameter("history_size").as_int();
   p.curvature_points_size = node->get_parameter("curvature_points_size").as_int();
+  p.k1 = node->get_parameter("k1").as_double();
+  p.k2 = node->get_parameter("k2").as_double();
   return p;
 }
 

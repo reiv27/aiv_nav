@@ -40,6 +40,8 @@ Controller::Controller(double linear_velocity,
                        double nu,
                        int history_size,
                        int curvature_points_size,
+                       double k1,
+                       double k2,
                        const std::string& mode_c_control_type)
     : linear_velocity_(linear_velocity)
     , angular_velocity_(angular_velocity)
@@ -55,6 +57,9 @@ Controller::Controller(double linear_velocity,
     , history_size_(history_size)
     , u_history_(history_size, 0.0)
     , curvature_points_(2 * curvature_points_size + 1, 0.0)
+    , k1_(k1)
+    , k2_(k2)
+    , integral_(0.0)
 {
 }
 
@@ -68,6 +73,7 @@ double Controller::relay_mode_c_control_(Controller& ctrl)
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sigma = ddR + second_part;
   const double sign = utils::soft_sign(sigma, 0.0);
+
   return ctrl.get_angular_velocity() * sign;
 }
 
@@ -81,7 +87,11 @@ double Controller::sta_mode_c_control_(Controller& ctrl)
   const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
   const double sigma = ddR + second_part;
   const double sign = utils::soft_sign(sigma, 0.0);
-  return ctrl.get_angular_velocity() * sign;
+
+  const double integral = ctrl.get_integral() + sign * ctrl.get_dt();
+  ctrl.set_integral(integral);
+  return ctrl.get_k1() * std::pow(std::abs(sigma), 0.5) * sign
+         + ctrl.get_k2() * integral;
 }
 
 std::function<double(Controller&)> Controller::get_mode_c_control_fn_(const std::string& name)
@@ -107,16 +117,16 @@ void Controller::update(const std::vector<double>& robot_state,
   auto now = std::chrono::steady_clock::now();
   auto duration = now.time_since_epoch();
   const double t_current = std::chrono::duration<double>(duration).count();
-  dt_ = t_current - t_prev_;
+  dt_ = std::min(t_current - t_prev_, 0.3);
   t_prev_ = t_current;
 
   double kappa = 0.0;
   curvature_valid_ = estimate_curvature(kappa);
   curvature_ = kappa;
 
-  if (curvature_valid_) {
-    std::cout << "kappa: " << kappa << std::endl;
-  }
+  // if (curvature_valid_) {
+  //   std::cout << "kappa: " << kappa << std::endl;
+  // }
 
   u_ = state_->calculate_control_signal(*this);
 
@@ -256,6 +266,36 @@ double Controller::get_nu() const
 const std::string& Controller::get_mode_c_control_type() const
 {
   return mode_c_control_type_;
+}
+
+double Controller::get_k1() const
+{
+  return k1_;
+}
+
+void Controller::set_k1(double k1)
+{
+  k1_ = k1;
+}
+
+double Controller::get_k2() const
+{
+  return k2_;
+}
+
+void Controller::set_k2(double k2)
+{
+  k2_ = k2;
+}
+
+double Controller::get_integral() const
+{
+  return integral_;
+}
+
+void Controller::set_integral(double integral)
+{
+  integral_ = integral;
 }
 
 double Controller::compute_mode_c_control()

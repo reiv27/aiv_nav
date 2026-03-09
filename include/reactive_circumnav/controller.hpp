@@ -37,6 +37,8 @@ public:
              double nu=1.0,
              int history_size=0,
              int curvature_points_size=0,
+             double k1=1.0,
+             double k2=1.0,
              const std::string& mode_c_control_type="relay");
 
   Controller(const Controller&) = delete;
@@ -145,6 +147,36 @@ public:
    * @brief Get Mode C control type ("relay" or "sta")
    */
   const std::string& get_mode_c_control_type() const;
+
+  /**
+   * @brief Get k1 (STA gain)
+   */
+  double get_k1() const;
+
+  /**
+   * @brief Set k1
+   */
+  void set_k1(double k1);
+
+  /**
+   * @brief Get k2 (STA gain)
+   */
+  double get_k2() const;
+
+  /**
+   * @brief Set k2
+   */
+  void set_k2(double k2);
+
+  /**
+   * @brief Get integral (STA integral term)
+   */
+  double get_integral() const;
+
+  /**
+   * @brief Set integral
+   */
+  void set_integral(double integral);
 
   /**
    * @brief Compute Mode C control signal using the function selected at construction.
@@ -291,6 +323,11 @@ private:
   std::vector<double> curvature_points_{};
   double curvature_{0.0};
   bool curvature_valid_{false};
+
+  // Super-Twisting Controller
+  double k1_{0.0};
+  double k2_{0.0};
+  double integral_{0.0};
 };
 
 #endif  // REACTIVE_CIRCUMNAV_CONTROLLER_HPP
