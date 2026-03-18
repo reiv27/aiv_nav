@@ -16,4 +16,4 @@ reactive_circumnav:
     history_size: 5
     curvature_points_size: 10
     k1: 1.0
-    k2: 0.1
+    k2: 0.2
