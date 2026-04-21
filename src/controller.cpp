@@ -14,6 +14,7 @@
 
 Controller::Controller()
     : linear_velocity_(0.0)
+    , linear_velocity_max_(0.0)
     , angular_velocity_(0.0)
     , R_min_(0.0)
     , rho_0_(0.0)
@@ -44,6 +45,7 @@ Controller::Controller(double linear_velocity,
                        double k2,
                        const std::string& mode_c_control_type)
     : linear_velocity_(linear_velocity)
+    , linear_velocity_max_(linear_velocity)
     , angular_velocity_(angular_velocity)
     , R_min_{ linear_velocity / angular_velocity + R_epsilon }
     , rho_0_(rho_0)
@@ -94,11 +96,36 @@ double Controller::sta_mode_c_control_(Controller& ctrl)
          + ctrl.get_k2() * integral;
 }
 
+double Controller::curv_mode_c_control_(Controller& ctrl)
+{
+  const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
+  const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
+  ctrl.set_dR_prev(dR);
+  ctrl.set_dR_dot(ddR);
+  const double saturated_dR = utils::saturation(dR, -0.1, 0.1);
+  const double second_part = ctrl.get_nu() * 0.025 * saturated_dR;
+  const double sigma = ddR + second_part;
+  const double sign = utils::soft_sign(sigma, 0.0);
+
+  double kappa = 0.0;
+  ctrl.curvature_valid_ = ctrl.estimate_curvature(kappa);
+  ctrl.curvature_ = kappa;
+  double vel = ctrl.get_angular_velocity() / kappa;
+  ctrl.set_linear_velocity(std::clamp(vel, 0.0, ctrl.get_linear_velocity_max()));
+
+  if (ctrl.curvature_valid_) {
+    std::cout << "kappa: " << kappa << " vel: " << vel << std::endl;
+  }
+
+  return ctrl.get_angular_velocity() * sign;
+}
+
 std::function<double(Controller&)> Controller::get_mode_c_control_fn_(const std::string& name)
 {
   static const std::unordered_map<std::string, std::function<double(Controller&)>> table = {
     {"relay", &Controller::relay_mode_c_control_},
     {"sta", &Controller::sta_mode_c_control_},
+    {"curv", &Controller::curv_mode_c_control_},
   };
   auto it = table.find(name);
   return (it != table.end()) ? it->second : &Controller::relay_mode_c_control_;
@@ -119,14 +146,6 @@ void Controller::update(const std::vector<double>& robot_state,
   const double t_current = std::chrono::duration<double>(duration).count();
   dt_ = std::min(t_current - t_prev_, 0.3);
   t_prev_ = t_current;
-
-  double kappa = 0.0;
-  curvature_valid_ = estimate_curvature(kappa);
-  curvature_ = kappa;
-
-  // if (curvature_valid_) {
-  //   std::cout << "kappa: " << kappa << std::endl;
-  // }
 
   u_ = state_->calculate_control_signal(*this);
 
@@ -216,6 +235,11 @@ double Controller::get_angular_velocity() const
 double Controller::get_linear_velocity() const
 {
   return linear_velocity_;
+}
+
+double Controller::get_linear_velocity_max() const
+{
+  return linear_velocity_max_;
 }
 
 double Controller::get_R_min() const
@@ -380,4 +404,9 @@ double Controller::get_curvature() const
 bool Controller::is_curvature_valid() const
 {
   return curvature_valid_;
+}
+
+void Controller::set_linear_velocity(double linear_velocity)
+{
+  linear_velocity_ = linear_velocity;
 }

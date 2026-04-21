@@ -174,7 +174,8 @@ void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedP
       << controller_.get_control_signal() << ","
       << controller_.get_dR_dot() << ","
       << controller_.get_curvature() << ","
-      << controller_.get_dt() << "\n";
+      << controller_.get_dt() << ","
+      << controller_.get_linear_velocity() << "\n";
   }
 
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();

@@ -99,6 +99,11 @@ public:
   double get_linear_velocity() const;
 
   /**
+   * @brief Nominal max linear speed from config (unchanged by curv braking).
+   */
+  double get_linear_velocity_max() const;
+
+  /**
    * @brief Get R_min
    */
   double get_R_min() const;
@@ -248,11 +253,19 @@ public:
    */
   bool is_curvature_valid() const;
 
+  /**
+   * @brief Set linear velocity
+   * @param linear_velocity New linear velocity
+   */
+  void set_linear_velocity(double linear_velocity);
+
 private:
   std::unique_ptr<State> state_{std::make_unique<ModeA>()};
 
   // Controller parameters
   double linear_velocity_;
+  /** Upper cap from parameters; curv mode must not use linear_velocity_ for this. */
+  double linear_velocity_max_{0.0};
   double angular_velocity_;
   double R_min_;
   double rho_0_;
@@ -317,6 +330,7 @@ private:
   // Реализации законов управления для режима C (выбор по имени в конструкторе)
   static double relay_mode_c_control_(Controller& ctrl);
   static double sta_mode_c_control_(Controller& ctrl);
+  static double curv_mode_c_control_(Controller& ctrl);
   static std::function<double(Controller&)> get_mode_c_control_fn_(const std::string& name);
 
   // Curvature of obstacles

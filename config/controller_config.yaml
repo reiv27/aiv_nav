@@ -1,11 +1,11 @@
 reactive_circumnav:
   ros__parameters:
-    mode_c_control_type: "sta"  # "relay", "sta"
+    mode_c_control_type: "relay"  # "relay", "sta", "curv"
     odom_topic: "/odom"
     scan_topic: "/scan"
-    telemetry_log_path: "/home/user/workspace/src/reactive_circumnav/results/controller_telemetry.csv"
-    linear_velocity: 0.5 #1.0
-    angular_velocity: 1.0 #0.666666
+    telemetry_log_path: "/home/user/workspace/src/reactive_circumnav/results/controller_telemetry_curv.csv"
+    linear_velocity: 1.0 #1.0
+    angular_velocity: 0.6666666 #2.0
     rho_0: 2.0
     R_epsilon: 0.0
     R_vis: 12.0
@@ -15,5 +15,5 @@ reactive_circumnav:
     nu: 100.0
     history_size: 5
     curvature_points_size: 10
-    k1: 1.0
-    k2: 0.2
+    k1: 1.80
+    k2: 0.4
