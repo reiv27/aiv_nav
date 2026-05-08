@@ -2,9 +2,10 @@
 Plot controller telemetry from CSV: distance to equidistant (dR), dR_dot, control u.
 
 Usage:
-  python read_csv_refactored.py <csv_path> <t1> <t2>
+  python read_and_plot_csv.py <csv_path> <t1> <t2> [--curvature|--no-curvature]
 Example:
-  python read_csv_refactored.py main_gazebo.csv 0 1090
+  python read_and_plot_csv.py main_gazebo.csv 0 1090
+  python read_and_plot_csv.py main_gazebo.csv 0 1090 --no-curvature
 """
 
 import argparse
@@ -174,14 +175,16 @@ def plot_distance_to_equidistant(dR, n, R_min, skip=0):
   plt.close()
 
 
-def plot_dr_drdot_u(dR, dR_dot, u_full, n, kappa_full=None, dt_full=None):
+def plot_dr_drdot_u(dR, dR_dot, u_full, n, kappa_full=None, dt_full=None, plot_curvature=True):
   """Second figure: dR, dR_dot, u, kappa, dt. Uses all data [0:n]. kappa, dt optional."""
   if dR_dot is None:
     dR_dot = np.gradient(dR, np.arange(n))
   ticks = np.arange(0, n)
 
+  kappa_plot = kappa_full if plot_curvature else None
+
   n_axes = 3
-  if kappa_full is not None:
+  if kappa_plot is not None:
     n_axes += 1
   if dt_full is not None:
     n_axes += 1
@@ -211,8 +214,8 @@ def plot_dr_drdot_u(dR, dR_dot, u_full, n, kappa_full=None, dt_full=None):
   axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
   ax_idx += 1
 
-  if kappa_full is not None:
-    axes[ax_idx].plot(ticks, kappa_full, color='purple')
+  if kappa_plot is not None:
+    axes[ax_idx].plot(ticks, kappa_plot, color='purple')
     axes[ax_idx].set_ylabel(r'$\kappa$', fontsize=FONT_SIZE_LABEL)
     axes[ax_idx].set_xlabel(r'$ticks$' if dt_full is None else None, fontsize=FONT_SIZE_LABEL)
     axes[ax_idx].set_title(r'$\kappa$ (curvature)', fontsize=24)
@@ -240,6 +243,12 @@ def parse_args():
   parser.add_argument('csv_path', help='Path to telemetry CSV')
   parser.add_argument('t1', type=int, help='Start tick (inclusive)')
   parser.add_argument('t2', type=int, help='End tick (exclusive)')
+  parser.add_argument(
+    '--curvature',
+    default=True,
+    action=argparse.BooleanOptionalAction,
+    help='Plot curvature κ when present in CSV (default: on). Use --no-curvature to omit.',
+  )
   return parser.parse_args()
 
 
@@ -264,6 +273,7 @@ def main():
     arr['dR'], arr['dR_dot'], arr['u_full'], n,
     kappa_full=arr.get('kappa_full'),
     dt_full=arr.get('dt_full'),
+    plot_curvature=args.curvature,
   )
 
 

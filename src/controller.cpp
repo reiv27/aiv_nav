@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <iostream>
 #include <limits>
 #include <unordered_map>
 
@@ -23,8 +22,6 @@ Controller::Controller()
     , lidar_angle_offset_(0.0)
     , disk_()
     , nu_(0.0)
-    , history_size_(0)
-    , u_history_(0, 0.0)
     , curvature_points_(0, 0.0)
 {
   mode_c_control_fn_ = &Controller::relay_mode_c_control_;
@@ -39,7 +36,6 @@ Controller::Controller(double linear_velocity,
                        double lidar_angle_offset,
                        uint64_t window_size,
                        double nu,
-                       int history_size,
                        int curvature_points_size,
                        double k1,
                        double k2,
@@ -56,13 +52,12 @@ Controller::Controller(double linear_velocity,
     , nu_(nu)
     , mode_c_control_type_(mode_c_control_type)
     , mode_c_control_fn_(get_mode_c_control_fn_(mode_c_control_type))
-    , history_size_(history_size)
-    , u_history_(history_size, 0.0)
     , curvature_points_(2 * curvature_points_size + 1, 0.0)
     , k1_(k1)
     , k2_(k2)
     , integral_(0.0)
 {
+  lidar_points_.assign(resolution_, {0.0, 0.0});
 }
 
 double Controller::relay_mode_c_control_(Controller& ctrl)
@@ -77,6 +72,17 @@ double Controller::relay_mode_c_control_(Controller& ctrl)
   const double sign = utils::soft_sign(sigma, 0.0);
 
   return ctrl.get_angular_velocity() * sign;
+}
+
+double Controller::barrier_mode_c_control_(Controller& ctrl)
+{
+  const double dR = ctrl.get_min_dist() - ctrl.get_rho_0();
+  const double ddR = (dR - ctrl.get_dR_prev()) / ctrl.get_dt();
+  ctrl.set_dR_prev(dR);
+  ctrl.set_dR_dot(ddR);
+  const double eps = 0.2;
+  const double u = dR / (eps - dR);
+  return std::clamp(u, -ctrl.get_angular_velocity(), ctrl.get_angular_velocity());
 }
 
 double Controller::sta_mode_c_control_(Controller& ctrl)
@@ -113,10 +119,6 @@ double Controller::curv_mode_c_control_(Controller& ctrl)
   double vel = ctrl.get_angular_velocity() / kappa;
   ctrl.set_linear_velocity(std::clamp(vel, 0.0, ctrl.get_linear_velocity_max()));
 
-  if (ctrl.curvature_valid_) {
-    std::cout << "kappa: " << kappa << " vel: " << vel << std::endl;
-  }
-
   return ctrl.get_angular_velocity() * sign;
 }
 
@@ -124,6 +126,7 @@ std::function<double(Controller&)> Controller::get_mode_c_control_fn_(const std:
 {
   static const std::unordered_map<std::string, std::function<double(Controller&)>> table = {
     {"relay", &Controller::relay_mode_c_control_},
+    {"barrier", &Controller::barrier_mode_c_control_},
     {"sta", &Controller::sta_mode_c_control_},
     {"curv", &Controller::curv_mode_c_control_},
   };
@@ -142,19 +145,17 @@ void Controller::update(const std::vector<double>& robot_state,
   }
 
   auto now = std::chrono::steady_clock::now();
-  auto duration = now.time_since_epoch();
-  const double t_current = std::chrono::duration<double>(duration).count();
-  dt_ = std::min(t_current - t_prev_, 0.3);
-  t_prev_ = t_current;
+  if (!t_initialized_) {
+    t_prev_ = now;
+    t_initialized_ = true;
+    u_ = 0.0;
+    return;
+  }
+  dt_ = std::min(std::chrono::duration<double>(now - t_prev_).count(), 0.3);
+  t_prev_ = now;
 
   u_ = state_->calculate_control_signal(*this);
 
-  // double tau = 0.15;
-  // double alpha = std::exp(-dt_ / tau);
-
-  // u_ = alpha * u_prev_ + (1 - alpha) * u_;
-  // u_prev_ = u_;
-  // u_ = moving_average_(u_);
 }
 
 void Controller::set_state(std::unique_ptr<State> s)
@@ -181,7 +182,6 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
 {
   lidar_data_ = lidar_data;
   min_dist_ = std::numeric_limits<double>::infinity();
-  lidar_points_.clear();
 
   size_t min_idx = 0;
   for (size_t i = 0; i < resolution_; ++i) {
@@ -191,16 +191,13 @@ void Controller::set_lidar_data_(const std::vector<double>& lidar_data)
       min_idx = i;
     }
 
-    // Calculate lidar points
     // indexes of lidar points are increasing in counter-clockwise direction
     const double angle = robot_state_[2] + lidar_angle_offset_ + i * 2 * M_PI / resolution_;
     const double range = std::min(lidar_data_[i], R_vis_);
-    const double lidar_point_x = robot_state_[0] + range * std::cos(angle);
-    const double lidar_point_y = robot_state_[1] + range * std::sin(angle);
-    const std::vector<double> lidar_point = {lidar_point_x, lidar_point_y};
-    lidar_points_.push_back(lidar_point);
-    lidar_closest_point_ = lidar_points_[min_idx]; 
+    lidar_points_[i][0] = robot_state_[0] + range * std::cos(angle);
+    lidar_points_[i][1] = robot_state_[1] + range * std::sin(angle);
   }
+  lidar_closest_point_ = lidar_points_[min_idx];
 
   disk_.update_pose(robot_state_, lidar_closest_point_, rho_0_ + R_min_);
   disk_.update_rays_length(lidar_points_, lidar_data);
@@ -364,17 +361,6 @@ const std::vector<double>& Controller::get_gap_point_2() const
   return gap_point_2_;
 }
 
-double Controller::moving_average_(double u)
-{
-  u_history_.pop_front();
-  u_history_.push_back(u);
-  
-  double sum = 0.0;
-  for (const auto& val : u_history_) {
-    sum += val;
-  }
-  return sum / history_size_;
-}
 
 bool Controller::estimate_curvature(double& kappa_out,
                                     double break_jump_m,

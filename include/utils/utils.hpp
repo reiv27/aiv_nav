@@ -77,6 +77,7 @@ inline double norm2(const std::array<double, 2>& a, const std::array<double, 2>&
 inline std::vector<double> normalize_vector(const std::vector<double>& v)
 {
   const double norm = std::sqrt(v[0] * v[0] + v[1] * v[1]);
+  if (norm < 1e-9) return {0.0, 0.0};
   return {v[0] / norm, v[1] / norm};
 }
 

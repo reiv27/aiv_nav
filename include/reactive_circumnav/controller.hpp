@@ -1,6 +1,7 @@
 #ifndef REACTIVE_CIRCUMNAV_CONTROLLER_HPP
 #define REACTIVE_CIRCUMNAV_CONTROLLER_HPP
 
+#include <chrono>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -35,7 +36,6 @@ public:
              double lidar_angle_offset,
              uint64_t window_size=0,
              double nu=1.0,
-             int history_size=0,
              int curvature_points_size=0,
              double k1=1.0,
              double k2=1.0,
@@ -149,7 +149,7 @@ public:
   double get_nu() const;
 
   /**
-   * @brief Get Mode C control type ("relay" or "sta")
+   * @brief Get Mode C control type ("relay", "sta", "curv", "barrier", …)
    */
   const std::string& get_mode_c_control_type() const;
 
@@ -287,16 +287,14 @@ private:
 
   // Control parameters
   double dt_{0.0};
-  double t_prev_{0.0};
+  std::chrono::steady_clock::time_point t_prev_;
+  bool t_initialized_{false};
   double dR_prev_{0.0};
   double dR_dot_{0.0};
   double u_{0.0};
-  double u_prev_{0.0};
   double nu_;
   std::string mode_c_control_type_{"relay"};
   std::function<double(Controller&)> mode_c_control_fn_{};
-  int history_size_;
-  std::deque<double> u_history_;
   std::vector<double> verA_{0.0, 0.0};
   std::vector<double> gap_point_1_{0.0, 0.0};
   std::vector<double> gap_point_2_{0.0, 0.0};
@@ -325,10 +323,10 @@ private:
    * @param u Control signal
    * @return Moving average of the control signal
    */
-  double moving_average_(double u);
 
   // Реализации законов управления для режима C (выбор по имени в конструкторе)
   static double relay_mode_c_control_(Controller& ctrl);
+  static double barrier_mode_c_control_(Controller& ctrl);
   static double sta_mode_c_control_(Controller& ctrl);
   static double curv_mode_c_control_(Controller& ctrl);
   static std::function<double(Controller&)> get_mode_c_control_fn_(const std::string& name);

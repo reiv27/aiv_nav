@@ -40,6 +40,8 @@ void CompanionDisk::update_pose(const std::vector<double>& robot_state,
                                 double distance)
 {
     const double length = utils::norm2(lidar_closest_point, robot_state);
+    if (length < 1e-9) return;
+
     const double ux = (robot_state[0] - lidar_closest_point[0]) / length;
     const double uy = (robot_state[1] - lidar_closest_point[1]) / length;
 

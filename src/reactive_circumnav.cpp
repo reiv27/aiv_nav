@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 #include <vector>
 
 #include <message_filters/subscriber.h>
@@ -46,8 +47,18 @@ private:
   visualization_msgs::msg::MarkerArray debug_markers_msg_;
   
   std::ofstream log_file_;
+  std::ostringstream log_buffer_;
+  int log_flush_counter_{0};
+  static constexpr int LOG_FLUSH_INTERVAL{50};
 
 public:
+  ~ReactiveCircumnav()
+  {
+    if (log_file_.is_open() && log_buffer_.tellp() > 0) {
+      log_file_ << log_buffer_.str();
+    }
+  }
+
   ReactiveCircumnav() : Node("reactive_circumnav")
   {
     this->declare_parameter<std::string>("odom_topic", "/odom");
@@ -121,7 +132,6 @@ public:
       p.lidar_angle_offset,
       p.window_size,
       p.nu,
-      p.history_size,
       p.curvature_points_size,
       p.k1,
       p.k2,
@@ -155,7 +165,7 @@ void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedP
   controller_.update(robot_state, lidar_data);
 
   if (log_file_.is_open()) {
-    log_file_
+    log_buffer_
       << robot_state[0] << "," << robot_state[1] << "," << robot_state[2] << ","
       << controller_.get_R_min() << ","
       << controller_.get_rho_0() << ","
@@ -176,6 +186,13 @@ void ReactiveCircumnav::syncCallback(const nav_msgs::msg::Odometry::ConstSharedP
       << controller_.get_curvature() << ","
       << controller_.get_dt() << ","
       << controller_.get_linear_velocity() << "\n";
+
+    if (++log_flush_counter_ >= LOG_FLUSH_INTERVAL) {
+      log_file_ << log_buffer_.str();
+      log_buffer_.str("");
+      log_buffer_.clear();
+      log_flush_counter_ = 0;
+    }
   }
 
   cmd_vel_msg_.linear.x = controller_.get_linear_velocity();
