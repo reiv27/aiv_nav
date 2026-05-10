@@ -17,6 +17,12 @@
       <render_engine>ogre2</render_engine>
     </plugin>
     <plugin name='gz::sim::systems::Contact' filename='gz-sim-contact-system'/>
+    <plugin name='trajectory_visual::TrajectoryVisualPlugin' filename='libtrajectory_visual_plugin.so'>
+      <odom_topic>/odom</odom_topic>
+      <min_dist>0.15</min_dist>
+      <marker_radius>0.04</marker_radius>
+      <color>1.0 0.2 0.0 1.0</color>
+    </plugin>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>

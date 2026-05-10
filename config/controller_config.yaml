@@ -3,11 +3,11 @@ reactive_circumnav:
     mode_c_control_type: "relay"  # "relay", "barrier", "sta", "curv"
     odom_topic: "/odom"
     scan_topic: "/scan"
-    telemetry_log_path: "/home/user/workspace/src/reactive_circumnav/results/test.csv"
+    telemetry_log_path: "/home/user/workspace/src/reactive_circumnav/results/diploma.csv"
     linear_velocity: 1.0 #1.0
-    angular_velocity: 0.6666666 #2.0
+    angular_velocity: 3.333333  #0.6666666
     rho_0: 2.0
-    R_epsilon: 0.1
+    R_epsilon: 0.2
     R_vis: 12.0
     resolution: 360
     lidar_angle_offset: 3.14159

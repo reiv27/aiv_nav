@@ -56,8 +56,12 @@ ament_target_dependencies(reactive_circumnav
   visualization_msgs
   std_msgs)
 
+add_executable(scan_dt_logger src/scan_dt_logger.cpp)
+target_compile_features(scan_dt_logger PUBLIC cxx_std_17)
+ament_target_dependencies(scan_dt_logger rclcpp sensor_msgs)
+
 # Install
-install(TARGETS reactive_circumnav reactive_circumnav_controller
+install(TARGETS reactive_circumnav scan_dt_logger reactive_circumnav_controller
   EXPORT reactive_circumnav_controllerTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -67,6 +71,10 @@ install(TARGETS reactive_circumnav reactive_circumnav_controller
 install(DIRECTORY include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.hpp")
+
+install(DIRECTORY worlds/
+  DESTINATION share/${PROJECT_NAME}/worlds
+  FILES_MATCHING PATTERN "*.sdf")
 
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config

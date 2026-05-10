@@ -2,10 +2,13 @@
 Plot controller telemetry from CSV: distance to equidistant (dR), dR_dot, control u.
 
 Usage:
-  python read_and_plot_csv.py <csv_path> <t1> <t2> [--curvature|--no-curvature]
+  python read_and_plot_csv.py <csv_path> <t1> <t2> [--rho RHO] [--curvature|--no-curvature] [--time] [--no-dt]
 Example:
   python read_and_plot_csv.py main_gazebo.csv 0 1090
+  python read_and_plot_csv.py main_gazebo.csv 0 1090 --rho 0.15
   python read_and_plot_csv.py main_gazebo.csv 0 1090 --no-curvature
+  python read_and_plot_csv.py main_gazebo.csv 0 1090 --time
+  python read_and_plot_csv.py main_gazebo.csv 0 1090 --no-dt
 """
 
 import argparse
@@ -34,6 +37,7 @@ COL_DT = 21      # dt, present if CSV has 22 columns
 FONT_SIZE_LABEL = 20
 FONT_SIZE_TITLE = 28
 FONT_SIZE_TICK = 20
+FONT_SIZE_SUBPLOT_TITLE = 24
 
 
 def load_telemetry(csv_path, t1, t2):
@@ -100,6 +104,21 @@ def print_dr_stats(dR, R_min, rho_0, state_last, skip=0):
   print(f"max mode dR: {np.max(dR[s:]) - np.min(dR[s:]):.6f}")
 
 
+def make_time_axis(t1, t2, dt_full=None, use_time=False):
+  """Return x values, label, and title suffix for tick/time plots."""
+  ticks = np.arange(0, t2 - t1)
+  if not use_time:
+    return ticks, r'$ticks$', ''
+  if dt_full is None:
+    print('Warning: --time requested, but CSV has no dt column. Using ticks.')
+    return ticks, r'$ticks$', ''
+
+  dt_slice = dt_full[t1:t2]
+  time = np.cumsum(dt_slice)
+  time -= time[0]
+  return time, r'$time$, s', ' vs time'
+
+
 def plot_disk_and_path(arr, R_min):
   """First figure: disk, path, etc. — only for range [t1:t2] set at launch."""
   x = arr['x']
@@ -146,15 +165,23 @@ def plot_disk_and_path(arr, R_min):
   plt.close()
 
 
-def plot_distance_to_equidistant(dR, n, R_min, skip=0):
+def plot_distance_to_equidistant(
+    dR, n, R_min, dt_full=None, use_time=False, skip=0, rho=None):
   """First figure: dR(t) with zero line and stats box."""
-  ticks = np.arange(0, n)
+  x_axis, x_label, title_suffix = make_time_axis(0, n, dt_full, use_time)
   fig, ax = plt.subplots(figsize=(24, 8))
-  ax.plot(ticks, dR, color='black')
+  ax.plot(x_axis, dR, color='black')
+  if len(x_axis) > 1:
+    ax.set_xlim(x_axis[0], x_axis[-1])
+  if rho is not None:
+    ax.set_ylim(bottom=-rho)
   ax.axhline(0.0, color='blue', linestyle='--')
-  ax.set_xlabel(r'$ticks$', fontsize=FONT_SIZE_LABEL)
+  ax.set_xlabel(x_label, fontsize=FONT_SIZE_LABEL)
   ax.set_ylabel(r'$d_R(t)$, m', fontsize=FONT_SIZE_LABEL)
-  ax.set_title(fr'Distance to equidistant. $R = {R_min:.2f}$ m', fontsize=FONT_SIZE_TITLE)
+  ax.set_title(
+    fr'Distance to equidistant{title_suffix}. $R = {R_min:.2f}$ m',
+    fontsize=FONT_SIZE_TITLE,
+  )
   ax.grid(True)
   ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
   s = skip
@@ -175,61 +202,80 @@ def plot_distance_to_equidistant(dR, n, R_min, skip=0):
   plt.close()
 
 
-def plot_dr_drdot_u(dR, dR_dot, u_full, n, kappa_full=None, dt_full=None, plot_curvature=True):
-  """Second figure: dR, dR_dot, u, kappa, dt. Uses all data [0:n]. kappa, dt optional."""
+def plot_dr_drdot_u(
+    dR, dR_dot, u_full, t1, t2, R_min,
+    kappa_full=None, dt_full=None, plot_curvature=True, plot_dt=True, use_time=False,
+    rho=None):
+  """Second figure: dR, dR_dot, u, kappa, dt. Uses data [t1:t2]. kappa, dt optional."""
+  n = len(dR)
+  t1 = max(0, min(t1, n))
+  t2 = max(t1, min(t2, n))
   if dR_dot is None:
     dR_dot = np.gradient(dR, np.arange(n))
-  ticks = np.arange(0, n)
+  x_axis, x_label, title_suffix = make_time_axis(t1, t2, dt_full, use_time)
 
-  kappa_plot = kappa_full if plot_curvature else None
+  dR_plot = dR[t1:t2]
+  dR_dot_plot = dR_dot[t1:t2]
+  u_plot = u_full[t1:t2]
+  kappa_plot = kappa_full[t1:t2] if plot_curvature and kappa_full is not None else None
+  dt_plot = dt_full[t1:t2] if plot_dt and dt_full is not None else None
 
   n_axes = 3
   if kappa_plot is not None:
     n_axes += 1
-  if dt_full is not None:
+  if dt_plot is not None:
     n_axes += 1
   fig, axes = plt.subplots(n_axes, 1, figsize=(24, 4 * n_axes), sharex=True)
   ax_idx = 0
 
-  axes[ax_idx].plot(ticks, dR, color='black')
+  axes[ax_idx].plot(x_axis, dR_plot, color='black')
   axes[ax_idx].axhline(0.0, color='blue', linestyle='--')
-  axes[ax_idx].set_ylabel(r'$d_R$, m', fontsize=FONT_SIZE_LABEL)
-  axes[ax_idx].set_title(r'$d_R$', fontsize=24)
+  axes[ax_idx].set_ylabel(r'$d_R(t)$, m', fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_title(
+    fr'Distance to equidistant{title_suffix}. $R = {R_min:.2f}$ m',
+    fontsize=FONT_SIZE_TITLE,
+  )
+  if rho is not None:
+    axes[ax_idx].set_ylim(bottom=-rho)
   axes[ax_idx].grid(True)
   axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
   ax_idx += 1
 
-  axes[ax_idx].plot(ticks, dR_dot, color='green')
+  axes[ax_idx].plot(x_axis, dR_dot_plot, color='green')
   axes[ax_idx].set_ylabel(r'$\dot{d}_R$', fontsize=FONT_SIZE_LABEL)
-  axes[ax_idx].set_title(r'$\dot{d}_R$', fontsize=24)
+  axes[ax_idx].set_title(r'$\dot{d}_R$', fontsize=FONT_SIZE_SUBPLOT_TITLE)
   axes[ax_idx].grid(True)
   axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
   ax_idx += 1
 
-  axes[ax_idx].plot(ticks, u_full, color='red')
+  axes[ax_idx].plot(x_axis, u_plot, color='red')
   axes[ax_idx].set_ylabel(r'$u$', fontsize=FONT_SIZE_LABEL)
-  axes[ax_idx].set_xlabel(r'$ticks$' if n_axes == 3 else None, fontsize=FONT_SIZE_LABEL)
-  axes[ax_idx].set_title(r'$u$', fontsize=24)
+  axes[ax_idx].set_xlabel(x_label if n_axes == 3 else None, fontsize=FONT_SIZE_LABEL)
+  axes[ax_idx].set_title(r'$u$', fontsize=FONT_SIZE_SUBPLOT_TITLE)
   axes[ax_idx].grid(True)
   axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
   ax_idx += 1
 
   if kappa_plot is not None:
-    axes[ax_idx].plot(ticks, kappa_plot, color='purple')
+    axes[ax_idx].plot(x_axis, kappa_plot, color='purple')
     axes[ax_idx].set_ylabel(r'$\kappa$', fontsize=FONT_SIZE_LABEL)
-    axes[ax_idx].set_xlabel(r'$ticks$' if dt_full is None else None, fontsize=FONT_SIZE_LABEL)
-    axes[ax_idx].set_title(r'$\kappa$ (curvature)', fontsize=24)
+    axes[ax_idx].set_xlabel(x_label if dt_plot is None else None, fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_title(r'$\kappa$ (curvature)', fontsize=FONT_SIZE_SUBPLOT_TITLE)
     axes[ax_idx].grid(True)
     axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
     ax_idx += 1
 
-  if dt_full is not None:
-    axes[ax_idx].plot(ticks, dt_full, color='brown')
+  if dt_plot is not None:
+    axes[ax_idx].plot(x_axis, dt_plot, color='brown')
     axes[ax_idx].set_ylabel(r'$dt$, s', fontsize=FONT_SIZE_LABEL)
-    axes[ax_idx].set_xlabel(r'$ticks$', fontsize=FONT_SIZE_LABEL)
-    axes[ax_idx].set_title(r'$dt$', fontsize=24)
+    axes[ax_idx].set_xlabel(x_label, fontsize=FONT_SIZE_LABEL)
+    axes[ax_idx].set_title(r'$dt$', fontsize=FONT_SIZE_SUBPLOT_TITLE)
     axes[ax_idx].grid(True)
     axes[ax_idx].tick_params(axis='both', which='major', labelsize=FONT_SIZE_TICK)
+
+  if len(x_axis) > 1:
+    for ax in axes:
+      ax.set_xlim(x_axis[0], x_axis[-1])
 
   plt.tight_layout()
   plt.show()
@@ -249,7 +295,29 @@ def parse_args():
     action=argparse.BooleanOptionalAction,
     help='Plot curvature κ when present in CSV (default: on). Use --no-curvature to omit.',
   )
-  return parser.parse_args()
+  parser.add_argument(
+    '--time',
+    action='store_true',
+    help='Use cumulative time from dt column for the X axis instead of ticks.',
+  )
+  parser.add_argument(
+    '--dt',
+    default=True,
+    action=argparse.BooleanOptionalAction,
+    help='Plot dt when present in CSV (default: on). Use --no-dt to omit.',
+  )
+  parser.add_argument(
+    '--rho',
+    type=float,
+    default=None,
+    metavar='RHO',
+    help='If set, lower y limit for d_R is -RHO (m); upper limit is autoscaled.',
+  )
+  args = parser.parse_args()
+  if args.rho is not None and args.rho <= 0:
+    print('error: --rho must be positive', file=sys.stderr)
+    sys.exit(1)
+  return args
 
 
 def main():
@@ -268,12 +336,15 @@ def main():
 
   # First figure: only range [t1:t2] (slice in arr)
   plot_disk_and_path(arr, arr['R_min'])
-  # Second figure: all data [0:n]
+  # Second figure: only range [t1:t2]
   plot_dr_drdot_u(
-    arr['dR'], arr['dR_dot'], arr['u_full'], n,
+    arr['dR'], arr['dR_dot'], arr['u_full'], t1, t2, arr['R_min'],
     kappa_full=arr.get('kappa_full'),
     dt_full=arr.get('dt_full'),
     plot_curvature=args.curvature,
+    plot_dt=args.dt,
+    use_time=args.time,
+    rho=args.rho,
   )
 
 
